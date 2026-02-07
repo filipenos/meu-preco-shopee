@@ -9,8 +9,7 @@
     "typecheck": "vue-tsc -b",
     "preview": "vite preview",
     "test": "vitest run",
-    "helper": "vite-node scripts/commission-helper.ts",
-    "helper:best-price": "vite-node scripts/best-price-helper.ts"
+    "helper": "vite-node scripts/net-from-full-price-helper.ts"
   },
   "dependencies": {
     "vue": "^3.4.0"
