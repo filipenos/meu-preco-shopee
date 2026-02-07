@@ -26,7 +26,10 @@ npm test
 
 ## Scripts auxiliares
 
-- Documentação interna do helper CLI atual: `scripts/README.md`
+- Helpers disponíveis:
+- `npm run helper:net-from-full-price -- --input ./scripts/test-data/dados.json`
+- `npm run helper:discount-from-net -- --input ./scripts/test-data/dados.json`
+- Documentação completa (formato do JSON, parâmetros e saída): `scripts/README.md`
 
 ## Casos de uso
 
