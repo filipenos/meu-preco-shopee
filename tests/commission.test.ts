@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { calculateCommission, calculateRequiredItemPrice } from '../src/domain/commission'
-import { defaultCommissionRules2026 } from '../src/domain/default-rules'
+import { createCommissionService } from '../src/services/commission-service'
+
+const service = createCommissionService()
 
 describe('calculateCommission', () => {
   it('calcula cnpj sem pix para item de R$500', () => {
-    const result = calculateCommission({
+    const result = service.calculateFromItemPrice({
       itemPrice: 500,
       sellerType: 'cnpj',
       paymentMethod: 'card_or_boleto',
       ordersLast90Days: 0,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
     expect(result.baseCommissionAmount).toBe(96)
@@ -20,13 +20,12 @@ describe('calculateCommission', () => {
   })
 
   it('calcula cnpj com pix para item de R$500', () => {
-    const result = calculateCommission({
+    const result = service.calculateFromItemPrice({
       itemPrice: 500,
       sellerType: 'cnpj',
       paymentMethod: 'pix',
       ordersLast90Days: 0,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
     expect(result.pixSubsidyAmount).toBe(40)
@@ -36,22 +35,20 @@ describe('calculateCommission', () => {
   })
 
   it('aplica adicional cpf quando pedidos em 90 dias passam do limite', () => {
-    const withExtra = calculateCommission({
+    const withExtra = service.calculateFromItemPrice({
       itemPrice: 100,
       sellerType: 'cpf',
       paymentMethod: 'card_or_boleto',
       ordersLast90Days: 451,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
-    const withoutExtra = calculateCommission({
+    const withoutExtra = service.calculateFromItemPrice({
       itemPrice: 100,
       sellerType: 'cpf',
       paymentMethod: 'card_or_boleto',
       ordersLast90Days: 450,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
     expect(withExtra.cpfExtraFeeAmount).toBe(3)
@@ -60,13 +57,12 @@ describe('calculateCommission', () => {
   })
 
   it('aplica regra de item barato para cnpj abaixo de R$8', () => {
-    const result = calculateCommission({
+    const result = service.calculateFromItemPrice({
       itemPrice: 6,
       sellerType: 'cnpj',
       paymentMethod: 'card_or_boleto',
       ordersLast90Days: 0,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
     expect(result.fixedFeeAmount).toBe(3)
@@ -77,13 +73,12 @@ describe('calculateCommission', () => {
 
 describe('calculateRequiredItemPrice', () => {
   it('encontra preço para líquido alvo no cenário cnpj sem pix', () => {
-    const result = calculateRequiredItemPrice({
+    const result = service.calculateFromTargetNet({
       targetNetAmount: 404,
       sellerType: 'cnpj',
       paymentMethod: 'card_or_boleto',
       ordersLast90Days: 0,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
     expect(result.suggestedItemPrice).toBeCloseTo(500, 2)
@@ -91,13 +86,12 @@ describe('calculateRequiredItemPrice', () => {
   })
 
   it('encontra preço para líquido alvo no cenário cnpj com pix', () => {
-    const result = calculateRequiredItemPrice({
+    const result = service.calculateFromTargetNet({
       targetNetAmount: 404,
       sellerType: 'cnpj',
       paymentMethod: 'pix',
       ordersLast90Days: 0,
       includeCampaignExtra: false,
-      rules: defaultCommissionRules2026,
     })
 
     expect(result.suggestedItemPrice).toBeCloseTo(500, 2)

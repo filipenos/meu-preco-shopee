@@ -8,7 +8,8 @@
     "build": "vite build",
     "typecheck": "vue-tsc -b",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "helper": "vite-node scripts/commission-helper.ts"
   },
   "dependencies": {
     "vue": "^3.4.0"
