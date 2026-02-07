@@ -183,6 +183,14 @@ select {
   font-size: 1.08rem;
 }
 
+.metric-note {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.75rem;
+  color: #61766f;
+  font-style: normal;
+}
+
 .explain-list {
   margin: 0;
   padding: 0 0 0 18px;

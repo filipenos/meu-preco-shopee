@@ -106,6 +106,14 @@ function paymentLabel(value: PaymentMethod): string {
   return value === 'pix' ? 'Pix' : 'Cartão ou Boleto'
 }
 
+function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): string {
+  if (itemPrice <= 0) {
+    return formatPercent(0)
+  }
+
+  return formatPercent(totalCommissionAmount / itemPrice)
+}
+
 function resetRulesConfig(): void {
   rulesConfig.campaignExtraRatePercent = defaultRulesConfig.campaignExtraRatePercent
   rulesConfig.cpfExtraFee = defaultRulesConfig.cpfExtraFee
@@ -188,6 +196,9 @@ function resetRulesConfig(): void {
           <div>
             <span>Comissão total</span>
             <strong>{{ formatCurrency(caseOneResult.totalCommissionAmount) }}</strong>
+            <em class="metric-note">
+              Efetivo: {{ effectiveRateLabel(caseOneResult.totalCommissionAmount, caseOneResult.itemPrice) }}
+            </em>
           </div>
           <div>
             <span>Valor líquido</span>
@@ -254,6 +265,10 @@ function resetRulesConfig(): void {
           <div>
             <span>Comissão total</span>
             <strong>{{ formatCurrency(caseTwoResult.outcome.totalCommissionAmount) }}</strong>
+            <em class="metric-note">
+              Efetivo:
+              {{ effectiveRateLabel(caseTwoResult.outcome.totalCommissionAmount, caseTwoResult.outcome.itemPrice) }}
+            </em>
           </div>
           <div>
             <span>Líquido alcançado</span>
