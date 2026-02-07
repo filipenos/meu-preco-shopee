@@ -375,6 +375,7 @@ function resetRulesConfig(): void {
             <li>Sem cobrança em cancelamento, devolução, reembolso ou desistência da compra.</li>
             <li>Campanha de Destaque Shopee adiciona {{ campaignRateLabel }} durante campanha ativa.</li>
             <li>Atualização desta política com vigência em 01/03/2026.</li>
+            <li>Subsídio Pix não é repasse extra ao vendedor; é regra de precificação/comissão no pagamento por Pix.</li>
           </ul>
         </article>
 

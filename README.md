@@ -68,6 +68,7 @@ npm test
 - CPF com item abaixo de R$12 usa taxa regressiva de item.
 - Não há comissão em cancelamento, devolução, reembolso ou desistência da compra.
 - Campanha de Destaque Shopee adiciona 2,5% durante campanha ativa.
+- Subsídio Pix não é repasse extra ao vendedor; é regra de precificação/comissão no fluxo Pix.
 - Atualização com vigência em 01/03/2026.
 
 ### CPF e documentação
