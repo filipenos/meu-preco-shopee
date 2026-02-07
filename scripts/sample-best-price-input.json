@@ -1,0 +1,32 @@
+{
+  "context": {
+    "sellerType": "cnpj",
+    "paymentMethod": "card_or_boleto",
+    "ordersLast90Days": 0,
+    "includeCampaignExtra": false
+  },
+  "discountCandidates": [0.1, 0.12, 0.15, 0.18],
+  "items": [
+    {
+      "productName": "Caixa personalizada",
+      "variationName": "Kit com 10 unidades",
+      "cost": 16,
+      "targetNet": 30,
+      "desiredDiscountRate": 0.12
+    },
+    {
+      "productName": "Caixa personalizada",
+      "variationName": "Kit com 20 unidades",
+      "cost": 26,
+      "targetNet": 44,
+      "desiredDiscountRate": 0.12
+    },
+    {
+      "productName": "Caixa personalizada",
+      "variationName": "Kit com 30 unidades",
+      "cost": 36,
+      "targetNet": 58,
+      "desiredDiscountRate": 0.12
+    }
+  ]
+}
