@@ -56,6 +56,8 @@ Campos principais:
   - `paymentMethod`
   - `ordersLast90Days`
   - `includeCampaignExtra`
+  - `couponRate` (opcional): percentual de cupom da loja em decimal (ex: `0.1` = 10%).
+  - `couponMaxDiscount` (opcional): teto de desconto do cupom em reais.
 - `items[]`
   - `productName` (opcional)
   - `variationName`
@@ -67,6 +69,7 @@ Campos principais:
 Observação:
 - Para calcular preço cheio, você precisa de `targetNet` e `desiredDiscountRate`.
 - `cost` é usado só para cálculo de margem (quando informado).
+- Cupom da loja é aplicado sobre o preço \"por\" (após de/por). Ele reduz o valor pago pelo comprador, reduz o líquido recebido e também a comissão.
 
 ### Saída
 

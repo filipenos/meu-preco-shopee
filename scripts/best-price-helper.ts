@@ -54,6 +54,11 @@ async function main(): Promise<void> {
     console.log(`\n- ${result.variationName}`)
     console.log(`  alvo líquido: ${formatCurrency(result.targetNet)}`)
     console.log(`  preço venda necessário (por): ${formatCurrency(result.sellingPriceNeeded)}`)
+    console.log(
+      `  cupom loja: ${formatPercent(result.couponRate)}${typeof result.couponMaxDiscount === 'number' ? ` (máximo ${formatCurrency(result.couponMaxDiscount)})` : ''}`,
+    )
+    console.log(`  desconto cupom aplicado: ${formatCurrency(result.couponDiscountAmount)}`)
+    console.log(`  preço pago pelo comprador (após cupom): ${formatCurrency(result.buyerPriceAfterCoupon)}`)
     console.log(`  desconto desejado: ${formatPercent(result.desiredDiscountRate)}`)
     console.log(`  preço cheio para desconto desejado: ${formatCurrency(result.fullPriceForDesiredDiscount)}`)
     console.log(`  sugestão desconto: ${formatPercent(result.suggestedDiscountRate)}`)

@@ -55,4 +55,48 @@ describe('calculateVariationPricingPlan', () => {
     expect(result[0].marginAmount).toBeUndefined()
     expect(result[0].marginRateOnCost).toBeUndefined()
   })
+
+  it('considera cupom da loja com teto no cálculo do preço necessário', () => {
+    const withoutCoupon = calculateVariationPricingPlan({
+      context: {
+        sellerType: 'cnpj',
+        paymentMethod: 'card_or_boleto',
+        ordersLast90Days: 0,
+        includeCampaignExtra: false,
+      },
+      items: [
+        {
+          variationName: 'Kit 30',
+          targetNet: 58,
+          desiredDiscountRate: 0.12,
+        },
+      ],
+    })
+
+    const withCoupon = calculateVariationPricingPlan({
+      context: {
+        sellerType: 'cnpj',
+        paymentMethod: 'card_or_boleto',
+        ordersLast90Days: 0,
+        includeCampaignExtra: false,
+        couponRate: 0.1,
+        couponMaxDiscount: 5,
+      },
+      items: [
+        {
+          variationName: 'Kit 30',
+          targetNet: 58,
+          desiredDiscountRate: 0.12,
+        },
+      ],
+    })
+
+    expect(withoutCoupon[0].expectedNet).toBeGreaterThanOrEqual(58)
+    expect(withCoupon[0].expectedNet).toBeGreaterThanOrEqual(58)
+    expect(withCoupon[0].couponDiscountAmount).toBe(5)
+    expect(withCoupon[0].buyerPriceAfterCoupon).toBeCloseTo(
+      withCoupon[0].sellingPriceNeeded - withCoupon[0].couponDiscountAmount,
+      2,
+    )
+  })
 })

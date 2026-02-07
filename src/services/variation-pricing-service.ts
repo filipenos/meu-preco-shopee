@@ -15,6 +15,8 @@ export interface VariationPricingContext {
   paymentMethod: PaymentMethod
   ordersLast90Days: number
   includeCampaignExtra: boolean
+  couponRate?: number
+  couponMaxDiscount?: number
 }
 
 export interface DiscountAlternative {
@@ -28,6 +30,10 @@ export interface VariationPricingResult {
   cost?: number
   targetNet: number
   expectedNet: number
+  couponRate: number
+  couponMaxDiscount?: number
+  couponDiscountAmount: number
+  buyerPriceAfterCoupon: number
   desiredDiscountRate: number
   sellingPriceNeeded: number
   fullPriceForDesiredDiscount: number
@@ -50,6 +56,66 @@ function clampDiscount(value: number): number {
   if (value < 0) return 0
   if (value >= 1) return 0.99
   return value
+}
+
+function applyCoupon(
+  listedPrice: number,
+  couponRate: number,
+  couponMaxDiscount?: number,
+): { couponDiscountAmount: number; buyerPriceAfterCoupon: number } {
+  const baseDiscount = listedPrice * couponRate
+  const limitedByMax = typeof couponMaxDiscount === 'number' ? Math.min(baseDiscount, couponMaxDiscount) : baseDiscount
+  const couponDiscountAmount = roundMoney(Math.min(Math.max(limitedByMax, 0), listedPrice))
+  const buyerPriceAfterCoupon = roundMoney(listedPrice - couponDiscountAmount)
+
+  return { couponDiscountAmount, buyerPriceAfterCoupon }
+}
+
+function solveListedPriceForTargetNet(
+  targetNet: number,
+  context: VariationPricingContext,
+  service: ReturnType<typeof createCommissionService>,
+): { listedPrice: number; expectedNet: number; couponDiscountAmount: number; buyerPriceAfterCoupon: number; totalCommission: number } {
+  const couponRate = clampDiscount(context.couponRate ?? 0)
+  const couponMaxDiscount = context.couponMaxDiscount
+
+  const calculateNetFromListed = (listedPrice: number) => {
+    const { couponDiscountAmount, buyerPriceAfterCoupon } = applyCoupon(listedPrice, couponRate, couponMaxDiscount)
+    const commission = service.calculateFromItemPrice({
+      itemPrice: buyerPriceAfterCoupon,
+      sellerType: context.sellerType,
+      paymentMethod: context.paymentMethod,
+      ordersLast90Days: context.ordersLast90Days,
+      includeCampaignExtra: context.includeCampaignExtra,
+    })
+
+    return {
+      listedPrice,
+      expectedNet: commission.netAmount,
+      couponDiscountAmount,
+      buyerPriceAfterCoupon,
+      totalCommission: commission.totalCommissionAmount,
+    }
+  }
+
+  let low = 0
+  let high = 500000
+  let best = calculateNetFromListed(high)
+
+  for (let i = 0; i < 80; i += 1) {
+    const mid = (low + high) / 2
+    const current = calculateNetFromListed(mid)
+
+    if (current.expectedNet >= targetNet) {
+      best = current
+      high = mid
+    } else {
+      low = mid
+    }
+  }
+
+  const roundedListed = roundMoney(best.listedPrice)
+  return calculateNetFromListed(roundedListed)
 }
 
 function buildDiscountCandidates(desired: number, explicit?: number[]): number[] {
@@ -89,19 +155,13 @@ function pickSuggestedAlternative(
 
 export function calculateVariationPricingPlan(input: VariationPricingPlanInput): VariationPricingResult[] {
   const service = createCommissionService(input.rulesConfig)
+  const couponRate = clampDiscount(input.context.couponRate ?? 0)
+  const couponMaxDiscount = input.context.couponMaxDiscount
 
   return input.items.map((item) => {
     const desiredDiscountRate = clampDiscount(item.desiredDiscountRate)
-
-    const fromNet = service.calculateFromTargetNet({
-      targetNetAmount: item.targetNet,
-      sellerType: input.context.sellerType,
-      paymentMethod: input.context.paymentMethod,
-      ordersLast90Days: input.context.ordersLast90Days,
-      includeCampaignExtra: input.context.includeCampaignExtra,
-    })
-
-    const sellingPriceNeeded = fromNet.suggestedItemPrice
+    const solved = solveListedPriceForTargetNet(item.targetNet, input.context, service)
+    const sellingPriceNeeded = solved.listedPrice
     const fullPriceForDesiredDiscount = roundMoney(sellingPriceNeeded / (1 - desiredDiscountRate))
 
     const alternatives = buildDiscountCandidates(desiredDiscountRate, input.discountCandidates).map((discountRate) => ({
@@ -121,11 +181,15 @@ export function calculateVariationPricingPlan(input: VariationPricingPlanInput):
       variationName: item.variationName,
       cost,
       targetNet: roundMoney(item.targetNet),
-      expectedNet: fromNet.outcome.netAmount,
+      expectedNet: solved.expectedNet,
+      couponRate,
+      couponMaxDiscount,
+      couponDiscountAmount: solved.couponDiscountAmount,
+      buyerPriceAfterCoupon: solved.buyerPriceAfterCoupon,
       desiredDiscountRate,
       sellingPriceNeeded,
       fullPriceForDesiredDiscount,
-      effectiveCommissionRate: sellingPriceNeeded > 0 ? fromNet.outcome.totalCommissionAmount / sellingPriceNeeded : 0,
+      effectiveCommissionRate: solved.buyerPriceAfterCoupon > 0 ? solved.totalCommission / solved.buyerPriceAfterCoupon : 0,
       marginAmount,
       marginRateOnCost,
       discountAlternatives: alternatives,
@@ -142,6 +206,10 @@ export function toCsv(results: VariationPricingResult[]): string {
     'cost',
     'targetNet',
     'sellingPriceNeeded',
+    'buyerPriceAfterCoupon',
+    'couponRate',
+    'couponMaxDiscount',
+    'couponDiscountAmount',
     'desiredDiscountRate',
     'fullPriceForDesiredDiscount',
     'suggestedDiscountRate',
@@ -158,6 +226,10 @@ export function toCsv(results: VariationPricingResult[]): string {
       result.cost ?? '',
       result.targetNet,
       result.sellingPriceNeeded,
+      result.buyerPriceAfterCoupon,
+      result.couponRate,
+      result.couponMaxDiscount ?? '',
+      result.couponDiscountAmount,
       result.desiredDiscountRate,
       result.fullPriceForDesiredDiscount,
       result.suggestedDiscountRate,
