@@ -24,14 +24,9 @@ npm run dev
 npm test
 ```
 
-## Helper CLI
+## Scripts auxiliares
 
-Executa os mesmos cálculos fora da UI, usando o `CommissionService`.
-
-```bash
-npm run helper -- from-price --price 500 --seller cnpj --payment pix --orders 0 --campaign false
-npm run helper -- from-net --net 404 --seller cnpj --payment card_or_boleto --orders 0 --campaign false
-```
+- Documentação interna dos helpers CLI: `scripts/README.md`
 
 ## Casos de uso
 
