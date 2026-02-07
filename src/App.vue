@@ -138,7 +138,7 @@ function resetRulesConfig(): void {
 
     <section class="grid-two">
       <article class="card">
-        <h2>1. Informo o valor do produto</h2>
+        <h2>Calcular taxa de comissão Shopee</h2>
         <p class="card-subtitle">Recebe preço e configurações, retorna comissão detalhada.</p>
 
         <div class="form-grid">
@@ -210,7 +210,7 @@ function resetRulesConfig(): void {
       </article>
 
       <article class="card">
-        <h2>2. Informo quanto quero receber</h2>
+        <h2>Calcular quanto quero receber</h2>
         <p class="card-subtitle">Recebe líquido desejado e configurações, retorna preço sugerido.</p>
 
         <div class="form-grid">
