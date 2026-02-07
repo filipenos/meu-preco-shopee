@@ -1,0 +1,27 @@
+{
+  "name": "meu-preco-shopee",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/tsconfig": "^0.4.0",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "vitest": "^3.0.5",
+    "vue-tsc": "^1.8.25"
+  }
+}
