@@ -1,6 +1,6 @@
 # Scripts internos
 
-Este diretório mantém 2 helpers CLI para cálculo fora da UI.
+Este diretório mantém 3 helpers CLI para cálculo fora da UI.
 
 ## Arquivo de entrada (`scripts/test-data/dados.json`)
 
@@ -107,3 +107,52 @@ Saída por variação:
 - `ok`: alvo atendido
 - `target-too-high`: alvo maior que o líquido sem desconto
 - `max-discount-cap-reached`: até 99% de desconto ainda sobra líquido acima do alvo
+
+## 3) Helper: preço cheio a partir do líquido alvo
+
+Comando:
+
+```bash
+npm run helper:full-price-from-net -- --input ./scripts/test-data/dados.json
+npm run helper:full-price-from-net -- --input ./scripts/test-data/dados.json --csv ./scripts/test-data/resultado.csv
+```
+
+Pergunta que responde:
+- "Com esse desconto e líquido esperado, qual preço cheio devo cadastrar?"
+
+Entrada esperada (`dados.json`):
+
+```json
+{
+  "context": {
+    "sellerType": "cpf",
+    "paymentMethod": "card_or_boleto",
+    "ordersLast90Days": 0,
+    "includeCampaignExtra": false,
+    "storeCoupon": {
+      "minPrice": 30,
+      "rate": 0.03,
+      "maxDiscount": 3
+    }
+  },
+  "items": [
+    { "variationName": "10 pecas", "discountPercent": 50, "targetNet": 27 }
+  ]
+}
+```
+
+Parâmetros:
+- `context`: mesma estrutura dos outros helpers.
+- `items[].discountPercent`: desconto já decidido (`50` ou `0.5`).
+- `items[].targetNet`: líquido desejado por variação.
+
+Saída por variação:
+- `requiredFullPrice` (preço cheio sugerido)
+- preço com desconto
+- efeito do cupom
+- comissão total
+- líquido alcançado
+- `status`:
+- `ok`: alvo atendido
+- `target-too-low`: alvo já é atendido com preço cheio `0`
+- `target-too-high`: alvo não foi alcançado no limite de busca

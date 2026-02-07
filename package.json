@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "helper:net-from-full-price": "vite-node scripts/net-from-full-price-helper.ts",
-    "helper:discount-from-net": "vite-node scripts/discount-from-target-net-helper.ts"
+    "helper:discount-from-net": "vite-node scripts/discount-from-target-net-helper.ts",
+    "helper:full-price-from-net": "vite-node scripts/full-price-from-target-net-helper.ts"
   },
   "dependencies": {
     "vue": "^3.4.0"
