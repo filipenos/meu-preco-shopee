@@ -26,7 +26,7 @@ npm test
 
 ## Scripts auxiliares
 
-- Documentação interna dos helpers CLI: `scripts/README.md`
+- Documentação interna do helper CLI atual: `scripts/README.md`
 
 ## Casos de uso
 

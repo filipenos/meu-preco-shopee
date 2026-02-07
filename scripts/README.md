@@ -1,84 +1,49 @@
 # Scripts internos
 
-Este diretório reúne helpers CLI usados para validar regras sem passar pela UI.
+Este diretório mantém, por enquanto, apenas o helper de cálculo de líquido por variação a partir do preço cheio.
 
-## 1) Commission helper
+## Net-from-full-price helper
 
-Usa o `CommissionService` para calcular comissão direta e cálculo inverso.
-
-### Comandos
-
-```bash
-npm run helper -- from-price --price 500 --seller cnpj --payment pix --orders 0 --campaign false
-npm run helper -- from-net --net 404 --seller cnpj --payment card_or_boleto --orders 0 --campaign false
-```
-
-### Parâmetros
-
-- `from-price`:
-  - `--price` (number)
-  - `--seller` (`cnpj` | `cpf`)
-  - `--payment` (`card_or_boleto` | `pix`)
-  - `--orders` (number)
-  - `--campaign` (`true` | `false`)
-- `from-net`:
-  - `--net` (number)
-  - demais iguais ao modo acima
-
-Parâmetros opcionais de regra:
-- `--campaign-rate` (decimal, ex: `0.025`)
-- `--cpf-extra-fee` (number)
-- `--cpf-threshold` (number)
-- `--cnpj-low` (number)
-- `--cpf-low` (number)
-
-## 2) Best-price helper
-
-Calcula preço cheio por variação com base em:
-- líquido alvo por variação
-- desconto desejado
-- contexto de comissão (CPF/CNPJ, Pix/cartão, etc.)
+Calcula o líquido por variação a partir de:
+- `fullPrice` (preço cheio)
+- `discountPercent` (desconto do de/por)
+- `context.sellerType`
 
 ### Comandos
 
 ```bash
-npm run helper:best-price -- --input ./scripts/sample-best-price-input.json
-npm run helper:best-price -- --input ./scripts/sample-best-price-input.json --csv ./saida-precos.csv
+npm run helper -- --input ./scripts/test-data/dados.json
+npm run helper -- --input ./scripts/test-data/dados.json --csv ./scripts/test-data/resultado.csv
 ```
+
+Observação:
+- `scripts/test-data/dados.json` é arquivo local e não versionado.
 
 ### Entrada JSON
 
-Arquivo de exemplo: `scripts/sample-best-price-input.json`
-
-Campos principais:
 - `context`
-  - `sellerType`
-  - `paymentMethod`
-  - `ordersLast90Days`
-  - `includeCampaignExtra`
-  - `couponRate` (opcional): percentual de cupom da loja em decimal (ex: `0.1` = 10%).
-  - `couponMaxDiscount` (opcional): teto de desconto do cupom em reais.
+  - `sellerType` (obrigatório)
+  - `paymentMethod` (opcional, default `card_or_boleto`)
+  - `ordersLast90Days` (opcional, default `0`)
+  - `includeCampaignExtra` (opcional, default `false`)
+  - `storeCoupon` (opcional): objeto de cupom da loja
+    - `minPrice` (opcional): valor mínimo para ativar cupom
+    - `rate` (opcional): percentual do cupom (ex: `0.1` ou `10`)
+    - `maxDiscount` (opcional): teto do desconto do cupom em reais
 - `items[]`
-  - `productName` (opcional)
   - `variationName`
-  - `cost` (opcional): custo da variação para você (produção/compra), em reais.
-  - `targetNet`: quanto você quer receber líquido por venda da variação, já após comissão.
-  - `desiredDiscountRate`: desconto desejado no formato decimal (ex: `0.12` = 12% no de/por).
-- `discountCandidates[]` (opcional): lista de descontos candidatos para sugerir melhor preço cheio.
-
-Observação:
-- Para calcular preço cheio, você precisa de `targetNet` e `desiredDiscountRate`.
-- `cost` é usado só para cálculo de margem (quando informado).
-- Cupom da loja é aplicado sobre o preço \"por\" (após de/por). Ele reduz o valor pago pelo comprador, reduz o líquido recebido e também a comissão.
+  - `fullPrice`
+  - `discountPercent` (`50` ou `0.5`)
 
 ### Saída
 
-- Console com resumo por variação.
-- CSV opcional com:
-  - custo
-  - líquido alvo
-  - preço de venda necessário (por)
-  - desconto desejado
-  - preço cheio para desconto desejado
-  - desconto/preço sugeridos
-  - comissão efetiva e margem
+- preço com desconto por variação
+- preço final do comprador após cupom (quando aplicável)
+- comissão total por variação
+- líquido por variação
+- comissão efetiva
+
+Ordem de cálculo:
+1. aplica `discountPercent` sobre `fullPrice` (de/por do produto)
+2. aplica `storeCoupon` sobre esse preço já com desconto (respeitando mínimo e teto)
+3. calcula comissão Shopee e líquido em cima do preço final após cupom

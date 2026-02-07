@@ -28,3 +28,7 @@ AGENTS.md
 tabela-cnpj.png
 tabela-exemplo-pix.png
 tabela-pix-cpf.png
+
+# Local helper data
+scripts/test-data/*.json
+scripts/test-data/*.csv
