@@ -200,7 +200,7 @@ function resetRulesConfig(): void {
 </script>
 
 <template>
-  <main class="page-shell">
+  <main class="page-shell min-h-screen">
     <section class="hero">
       <p class="eyebrow">Meu Preço Shopee</p>
       <h1>Meu Preço Shopee</h1>
