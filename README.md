@@ -100,7 +100,3 @@ npm test
 
 - A interface permite ajustar parâmetros para simulações, mas o padrão inicial segue a política oficial publicada em 06/02/2026.
 - Para valores de item muito baixos, o projeto aplica as regras especiais de item barato conforme tipo de vendedor.
-
-## TODO
-
-- Aplicar na UI a mesma regra de cupom/desconto de loja usada nos helpers CLI (`storeCoupon`: mínimo, percentual e teto).
