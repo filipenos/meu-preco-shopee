@@ -5,7 +5,8 @@ import { defaultCommissionRules2026 } from './domain/default-rules'
 import type { CommissionRules, PaymentMethod, SellerType } from './domain/types'
 import { formatCurrency, formatPercent } from './lib/money'
 import { getCommissionFromItemPrice } from './use-cases/get-commission-from-item-price'
-import { getItemPriceFromTargetNet } from './use-cases/get-item-price-from-target-net'
+import { calculateFullPriceFromTargetNet } from './services/full-price-from-target-net-service'
+import { calculateNetFromFullPrice } from './services/net-from-full-price-service'
 
 const rulesConfig = reactive({
   campaignExtraRatePercent: 2.5,
@@ -29,6 +30,7 @@ const caseOneForm = reactive({
   paymentMethod: 'card_or_boleto' as PaymentMethod,
   ordersLast90Days: 0,
   includeCampaignExtra: false,
+  includeStoreCoupon: false,
 })
 
 const caseTwoForm = reactive({
@@ -37,6 +39,13 @@ const caseTwoForm = reactive({
   paymentMethod: 'card_or_boleto' as PaymentMethod,
   ordersLast90Days: 0,
   includeCampaignExtra: false,
+  includeStoreCoupon: false,
+})
+
+const storeCouponConfig = reactive({
+  minPrice: 30,
+  ratePercent: 3,
+  maxDiscount: 3,
 })
 
 const cnpjRuleCards = computed(() => {
@@ -70,9 +79,51 @@ const activeRules = computed<CommissionRules>(() => ({
   cpfLowPriceThreshold: rulesConfig.cpfLowPriceThreshold,
 }))
 
-const caseOneResult = computed(() =>
+const serviceRulesConfig = computed(() => ({
+  campaignExtraRate: rulesConfig.campaignExtraRatePercent / 100,
+  cpfExtraFee: rulesConfig.cpfExtraFee,
+  cpfExtraOrdersThreshold90d: rulesConfig.cpfExtraOrdersThreshold90d,
+  cnpjLowPriceThreshold: rulesConfig.cnpjLowPriceThreshold,
+  cpfLowPriceThreshold: rulesConfig.cpfLowPriceThreshold,
+}))
+
+function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; maxDiscount: number } | undefined {
+  if (!enabled) {
+    return undefined
+  }
+
+  return {
+    minPrice: storeCouponConfig.minPrice,
+    rate: storeCouponConfig.ratePercent / 100,
+    maxDiscount: storeCouponConfig.maxDiscount,
+  }
+}
+
+const caseOneResult = computed(() => {
+  const [result] = calculateNetFromFullPrice({
+    context: {
+      sellerType: caseOneForm.sellerType,
+      paymentMethod: caseOneForm.paymentMethod,
+      ordersLast90Days: caseOneForm.ordersLast90Days,
+      includeCampaignExtra: caseOneForm.includeCampaignExtra,
+      storeCoupon: buildStoreCoupon(caseOneForm.includeStoreCoupon),
+    },
+    items: [
+      {
+        variationName: 'item',
+        fullPrice: caseOneForm.itemPrice,
+        discountPercent: 0,
+      },
+    ],
+    rulesConfig: serviceRulesConfig.value,
+  })
+
+  return result
+})
+
+const caseOneCommissionBreakdown = computed(() =>
   getCommissionFromItemPrice({
-    itemPrice: caseOneForm.itemPrice,
+    itemPrice: caseOneResult.value.finalBuyerPrice,
     sellerType: caseOneForm.sellerType,
     paymentMethod: caseOneForm.paymentMethod,
     ordersLast90Days: caseOneForm.ordersLast90Days,
@@ -81,9 +132,31 @@ const caseOneResult = computed(() =>
   }),
 )
 
-const caseTwoResult = computed(() =>
-  getItemPriceFromTargetNet({
-    targetNetAmount: caseTwoForm.targetNetAmount,
+const caseTwoResult = computed(() => {
+  const [result] = calculateFullPriceFromTargetNet({
+    context: {
+      sellerType: caseTwoForm.sellerType,
+      paymentMethod: caseTwoForm.paymentMethod,
+      ordersLast90Days: caseTwoForm.ordersLast90Days,
+      includeCampaignExtra: caseTwoForm.includeCampaignExtra,
+      storeCoupon: buildStoreCoupon(caseTwoForm.includeStoreCoupon),
+    },
+    items: [
+      {
+        variationName: 'item',
+        discountPercent: 0,
+        targetNet: caseTwoForm.targetNetAmount,
+      },
+    ],
+    rulesConfig: serviceRulesConfig.value,
+  })
+
+  return result
+})
+
+const caseTwoCommissionBreakdown = computed(() =>
+  getCommissionFromItemPrice({
+    itemPrice: caseTwoResult.value.finalBuyerPrice,
     sellerType: caseTwoForm.sellerType,
     paymentMethod: caseTwoForm.paymentMethod,
     ordersLast90Days: caseTwoForm.ordersLast90Days,
@@ -92,11 +165,14 @@ const caseTwoResult = computed(() =>
   }),
 )
 
+const caseTwoNetDiff = computed(() => caseTwoResult.value.netAmount - caseTwoForm.targetNetAmount)
+
 const campaignRateLabel = computed(() => formatPercent(rulesConfig.campaignExtraRatePercent / 100))
 const cpfExtraFeeLabel = computed(() => formatCurrency(rulesConfig.cpfExtraFee))
 const cpfOrdersThresholdLabel = computed(() => rulesConfig.cpfExtraOrdersThreshold90d.toLocaleString('pt-BR'))
 const cnpjLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cnpjLowPriceThreshold))
 const cpfLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cpfLowPriceThreshold))
+const storeCouponRateLabel = computed(() => formatPercent(storeCouponConfig.ratePercent / 100))
 
 function sellerLabel(value: SellerType): string {
   return value === 'cnpj' ? 'CNPJ' : 'CPF'
@@ -147,7 +223,7 @@ function resetRulesConfig(): void {
     <section class="grid-two">
       <article class="card">
         <h2>Calcular taxa de comissão Shopee</h2>
-        <p class="card-subtitle">Recebe preço e configurações, retorna comissão detalhada.</p>
+        <p class="card-subtitle">Recebe preço e configurações, com cupom loja opcional antes da comissão.</p>
 
         <div class="form-grid">
           <label>
@@ -182,47 +258,66 @@ function resetRulesConfig(): void {
           Aplicar Campanha de Destaque Shopee ({{ campaignRateLabel }})
         </label>
 
+        <label class="inline-check">
+          <input v-model="caseOneForm.includeStoreCoupon" type="checkbox" />
+          Aplicar cupom da loja
+        </label>
+
+        <div v-if="caseOneForm.includeStoreCoupon" class="form-grid">
+          <label>
+            Cupom (%)
+            <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
+          </label>
+          <label>
+            Mínimo para cupom (R$)
+            <input v-model.number="storeCouponConfig.minPrice" type="number" min="0" step="0.01" />
+          </label>
+          <label>
+            Teto desconto cupom (R$)
+            <input v-model.number="storeCouponConfig.maxDiscount" type="number" min="0" step="0.01" />
+          </label>
+        </div>
+
         <div class="result-grid">
           <div>
-            <span>Faixa</span>
-            <strong>
-              {{ formatCurrency(caseOneResult.bracket.min) }}
-              <template v-if="caseOneResult.bracket.max !== null">
-                até {{ formatCurrency(caseOneResult.bracket.max) }}
-              </template>
-              <template v-else>ou mais</template>
-            </strong>
+            <span>Preço base</span>
+            <strong>{{ formatCurrency(caseOneForm.itemPrice) }}</strong>
+          </div>
+          <div>
+            <span>Desconto cupom</span>
+            <strong>{{ formatCurrency(caseOneResult.couponDiscountAmount) }}</strong>
+          </div>
+          <div>
+            <span>Preço final comprador</span>
+            <strong>{{ formatCurrency(caseOneResult.finalBuyerPrice) }}</strong>
           </div>
           <div>
             <span>Comissão total</span>
-            <strong>{{ formatCurrency(caseOneResult.totalCommissionAmount) }}</strong>
+            <strong>{{ formatCurrency(caseOneResult.commissionAmount) }}</strong>
             <em class="metric-note">
-              Efetivo: {{ effectiveRateLabel(caseOneResult.totalCommissionAmount, caseOneResult.itemPrice) }}
+              Efetivo: {{ effectiveRateLabel(caseOneResult.commissionAmount, caseOneResult.finalBuyerPrice) }}
             </em>
           </div>
           <div>
             <span>Valor líquido</span>
             <strong>{{ formatCurrency(caseOneResult.netAmount) }}</strong>
           </div>
-          <div>
-            <span>Subsídio Pix</span>
-            <strong>{{ formatCurrency(caseOneResult.pixSubsidyAmount) }}</strong>
-          </div>
         </div>
 
         <ul class="explain-list">
-          <li>{{ sellerLabel(caseOneResult.sellerType) }} • {{ paymentLabel(caseOneResult.paymentMethod) }}</li>
-          <li>Parcela percentual: {{ formatCurrency(caseOneResult.percentageAmount) }}</li>
-          <li>Taxa fixa aplicável: {{ formatCurrency(caseOneResult.fixedFeeAmount) }}</li>
-          <li>Adicional CPF aplicado: {{ formatCurrency(caseOneResult.cpfExtraFeeAmount) }}</li>
-          <li>Comissão base: {{ formatCurrency(caseOneResult.baseCommissionAmount) }}</li>
-          <li>Comissão após subsídio: {{ formatCurrency(caseOneResult.commissionAmount) }}</li>
+          <li>{{ sellerLabel(caseOneForm.sellerType) }} • {{ paymentLabel(caseOneForm.paymentMethod) }}</li>
+          <li>
+            Cupom loja: {{ caseOneForm.includeStoreCoupon ? `ativo (${storeCouponRateLabel})` : 'desativado' }}
+          </li>
+          <li>Subsídio Pix aplicado: {{ formatCurrency(caseOneCommissionBreakdown.pixSubsidyAmount) }}</li>
+          <li>Comissão base: {{ formatCurrency(caseOneCommissionBreakdown.baseCommissionAmount) }}</li>
+          <li>Comissão final: {{ formatCurrency(caseOneResult.commissionAmount) }}</li>
         </ul>
       </article>
 
       <article class="card">
         <h2>Calcular quanto quero receber</h2>
-        <p class="card-subtitle">Recebe líquido desejado e configurações, retorna preço sugerido.</p>
+        <p class="card-subtitle">Recebe líquido desejado e configurações, com cupom loja opcional.</p>
 
         <div class="form-grid">
           <label>
@@ -257,34 +352,63 @@ function resetRulesConfig(): void {
           Aplicar Campanha de Destaque Shopee ({{ campaignRateLabel }})
         </label>
 
+        <label class="inline-check">
+          <input v-model="caseTwoForm.includeStoreCoupon" type="checkbox" />
+          Aplicar cupom da loja
+        </label>
+
+        <div v-if="caseTwoForm.includeStoreCoupon" class="form-grid">
+          <label>
+            Cupom (%)
+            <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
+          </label>
+          <label>
+            Mínimo para cupom (R$)
+            <input v-model.number="storeCouponConfig.minPrice" type="number" min="0" step="0.01" />
+          </label>
+          <label>
+            Teto desconto cupom (R$)
+            <input v-model.number="storeCouponConfig.maxDiscount" type="number" min="0" step="0.01" />
+          </label>
+        </div>
+
         <div class="result-grid">
           <div>
             <span>Preço sugerido</span>
-            <strong>{{ formatCurrency(caseTwoResult.suggestedItemPrice) }}</strong>
+            <strong>{{ formatCurrency(caseTwoResult.requiredFullPrice) }}</strong>
+          </div>
+          <div>
+            <span>Desconto cupom</span>
+            <strong>{{ formatCurrency(caseTwoResult.couponDiscountAmount) }}</strong>
+          </div>
+          <div>
+            <span>Preço final comprador</span>
+            <strong>{{ formatCurrency(caseTwoResult.finalBuyerPrice) }}</strong>
           </div>
           <div>
             <span>Comissão total</span>
-            <strong>{{ formatCurrency(caseTwoResult.outcome.totalCommissionAmount) }}</strong>
+            <strong>{{ formatCurrency(caseTwoResult.commissionAmount) }}</strong>
             <em class="metric-note">
-              Efetivo:
-              {{ effectiveRateLabel(caseTwoResult.outcome.totalCommissionAmount, caseTwoResult.outcome.itemPrice) }}
+              Efetivo: {{ effectiveRateLabel(caseTwoResult.commissionAmount, caseTwoResult.finalBuyerPrice) }}
             </em>
           </div>
           <div>
             <span>Líquido alcançado</span>
-            <strong>{{ formatCurrency(caseTwoResult.outcome.netAmount) }}</strong>
+            <strong>{{ formatCurrency(caseTwoResult.netAmount) }}</strong>
           </div>
           <div>
             <span>Diferença para alvo</span>
-            <strong>{{ formatCurrency(caseTwoResult.outcome.netAmount - caseTwoResult.requestedNetAmount) }}</strong>
+            <strong>{{ formatCurrency(caseTwoNetDiff) }}</strong>
           </div>
         </div>
 
         <ul class="explain-list">
-          <li>Alvo informado: {{ formatCurrency(caseTwoResult.requestedNetAmount) }}</li>
-          <li>Faixa encontrada: {{ formatCurrency(caseTwoResult.outcome.bracket.min) }} +</li>
-          <li>Subsídio Pix aplicado: {{ formatCurrency(caseTwoResult.outcome.pixSubsidyAmount) }}</li>
-          <li>Comissão final: {{ formatCurrency(caseTwoResult.outcome.totalCommissionAmount) }}</li>
+          <li>Alvo informado: {{ formatCurrency(caseTwoForm.targetNetAmount) }}</li>
+          <li>
+            Cupom loja: {{ caseTwoForm.includeStoreCoupon ? `ativo (${storeCouponRateLabel})` : 'desativado' }}
+          </li>
+          <li>Subsídio Pix aplicado: {{ formatCurrency(caseTwoCommissionBreakdown.pixSubsidyAmount) }}</li>
+          <li>Status do cálculo: {{ caseTwoResult.status }}</li>
         </ul>
       </article>
     </section>
