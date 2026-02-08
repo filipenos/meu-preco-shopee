@@ -247,7 +247,7 @@ function resetRulesConfig(): void {
             </select>
           </label>
 
-          <label>
+          <label v-if="caseOneForm.sellerType === 'cpf'">
             Pedidos em 90 dias
             <input v-model.number="caseOneForm.ordersLast90Days" type="number" min="0" step="1" />
           </label>
@@ -341,7 +341,7 @@ function resetRulesConfig(): void {
             </select>
           </label>
 
-          <label>
+          <label v-if="caseTwoForm.sellerType === 'cpf'">
             Pedidos em 90 dias
             <input v-model.number="caseTwoForm.ordersLast90Days" type="number" min="0" step="1" />
           </label>
