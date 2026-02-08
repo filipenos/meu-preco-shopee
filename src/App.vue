@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
+import { inject } from '@vercel/analytics'
 
 import { defaultCommissionRules2026 } from './domain/default-rules'
 import type { CommissionRules, PaymentMethod, SellerType } from './domain/types'
@@ -7,6 +8,9 @@ import { formatCurrency, formatPercent } from './lib/money'
 import { getCommissionFromItemPrice } from './use-cases/get-commission-from-item-price'
 import { calculateFullPriceFromTargetNet } from './services/full-price-from-target-net-service'
 import { calculateNetFromFullPrice } from './services/net-from-full-price-service'
+
+// Initialize Vercel Web Analytics
+inject()
 
 const rulesConfig = reactive({
   campaignExtraRatePercent: 2.5,
