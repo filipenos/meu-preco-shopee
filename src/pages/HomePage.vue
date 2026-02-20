@@ -4,7 +4,7 @@ import { inject } from '@vercel/analytics'
 
 import { defaultCommissionRules2026 } from '../domain/default-rules'
 import type { CommissionRules, PaymentMethod, SellerType } from '../domain/types'
-import { finalBasedToListingDiscountPercent, normalizePercentInput } from '../lib/discount'
+import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getCommissionFromItemPrice } from '../use-cases/get-commission-from-item-price'
 import { calculateFullPriceFromTargetNet } from '../services/full-price-from-target-net-service'
@@ -98,7 +98,7 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
 
   return {
     minPrice: storeCouponConfig.minPrice,
-    rate: finalBasedToListingDiscountPercent(storeCouponConfig.ratePercent),
+    rate: normalizePercentInput(storeCouponConfig.ratePercent),
     maxDiscount: storeCouponConfig.maxDiscount,
   }
 }
@@ -176,10 +176,7 @@ const cpfExtraFeeLabel = computed(() => formatCurrency(rulesConfig.cpfExtraFee))
 const cpfOrdersThresholdLabel = computed(() => rulesConfig.cpfExtraOrdersThreshold90d.toLocaleString('pt-BR'))
 const cnpjLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cnpjLowPriceThreshold))
 const cpfLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cpfLowPriceThreshold))
-const finalBasedStoreCouponRateLabel = computed(() => formatPercent(normalizePercentInput(storeCouponConfig.ratePercent)))
-const effectiveStoreCouponRateLabel = computed(() =>
-  formatPercent(finalBasedToListingDiscountPercent(storeCouponConfig.ratePercent)),
-)
+const storeCouponRateLabel = computed(() => formatPercent(normalizePercentInput(storeCouponConfig.ratePercent)))
 
 function sellerLabel(value: SellerType): string {
   return value === 'cnpj' ? 'CNPJ' : 'CPF'
@@ -276,7 +273,7 @@ function resetRulesConfig(): void {
 
         <div v-if="caseOneForm.includeStoreCoupon" class="form-grid">
           <label>
-            Cupom (% sobre preço final)
+            Cupom (%)
             <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
           </label>
           <label>
@@ -321,7 +318,7 @@ function resetRulesConfig(): void {
             Cupom loja:
             {{
               caseOneForm.includeStoreCoupon
-                ? `ativo (${finalBasedStoreCouponRateLabel} sobre final, equivalente ${effectiveStoreCouponRateLabel})`
+                ? `ativo (${storeCouponRateLabel})`
                 : 'desativado'
             }}
           </li>
@@ -375,7 +372,7 @@ function resetRulesConfig(): void {
 
         <div v-if="caseTwoForm.includeStoreCoupon" class="form-grid">
           <label>
-            Cupom (% sobre preço final)
+            Cupom (%)
             <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
           </label>
           <label>
@@ -424,7 +421,7 @@ function resetRulesConfig(): void {
             Cupom loja:
             {{
               caseTwoForm.includeStoreCoupon
-                ? `ativo (${finalBasedStoreCouponRateLabel} sobre final, equivalente ${effectiveStoreCouponRateLabel})`
+                ? `ativo (${storeCouponRateLabel})`
                 : 'desativado'
             }}
           </li>

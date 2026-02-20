@@ -2,7 +2,7 @@
 import { computed, reactive } from 'vue'
 
 import type { PaymentMethod, SellerType } from '../domain/types'
-import { finalBasedToListingDiscountPercent, normalizePercentInput } from '../lib/discount'
+import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getProductValueRuleVisibility } from './product-value-rule-visibility'
 import { calculateProductValueFromCostAndTargetProfit } from '../services/product-value-from-cost-and-target-profit-service'
@@ -47,7 +47,7 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
 
   return {
     minPrice: storeCouponConfig.minPrice,
-    rate: finalBasedToListingDiscountPercent(storeCouponConfig.ratePercent),
+    rate: normalizePercentInput(storeCouponConfig.ratePercent),
     maxDiscount: storeCouponConfig.maxDiscount,
   }
 }
@@ -66,7 +66,7 @@ const result = computed(() => {
         variationName: 'item',
         productCost: form.productCost,
         targetProfit: form.targetNetAmount,
-        productCouponPercent: effectiveProductCouponPercent.value,
+        productCouponPercent: normalizePercentInput(form.productCouponPercent),
       },
     ],
     rulesConfig: serviceRulesConfig.value,
@@ -80,12 +80,10 @@ const cpfExtraFeeLabel = computed(() => formatCurrency(rulesConfig.cpfExtraFee))
 const cpfOrdersThresholdLabel = computed(() => rulesConfig.cpfExtraOrdersThreshold90d.toLocaleString('pt-BR'))
 const cnpjLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cnpjLowPriceThreshold))
 const cpfLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cpfLowPriceThreshold))
-const finalBasedStoreCouponPercent = computed(() => normalizePercentInput(storeCouponConfig.ratePercent))
-const effectiveStoreCouponPercent = computed(() => finalBasedToListingDiscountPercent(storeCouponConfig.ratePercent))
+const storeCouponPercent = computed(() => normalizePercentInput(storeCouponConfig.ratePercent))
 const showCouponFields = computed(() => form.includeStoreCoupon)
 const visibleRules = computed(() => getProductValueRuleVisibility(form.sellerType))
-const finalBasedProductCouponPercent = computed(() => normalizePercentInput(form.productCouponPercent))
-const effectiveProductCouponPercent = computed(() => finalBasedToListingDiscountPercent(form.productCouponPercent))
+const productCouponPercent = computed(() => normalizePercentInput(form.productCouponPercent))
 
 function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): string {
   if (itemPrice <= 0) {
@@ -184,11 +182,10 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
           <div class="input-block-header">
             <h3>3. Descontos</h3>
             <p>Cupons que impactam o preço final para chegar no líquido alvo.</p>
-            <p>Com lucro alvo fixo, o cupom da loja ajusta o preço de cadastro para manter o líquido desejado.</p>
           </div>
           <div class="form-grid">
             <label>
-              Cupom do produto (% sobre preço final)
+              Cupom do produto (%)
               <input v-model.number="form.productCouponPercent" type="number" min="0" max="100" step="0.01" />
             </label>
             <div>
@@ -199,7 +196,7 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
             </div>
             <template v-if="showCouponFields">
               <label>
-                Cupom da loja (% sobre preço final)
+                Cupom da loja (%)
                 <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
               </label>
               <label>
@@ -292,15 +289,12 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
             <li>Custo do produto: {{ formatCurrency(form.productCost) }}</li>
             <li>Lucro líquido desejado (no bolso): {{ formatCurrency(form.targetNetAmount) }}</li>
             <li>Alvo total (custo + lucro): {{ formatCurrency(result.targetNetAmount) }}</li>
-            <li>
-              Cupom do produto (sobre final): {{ formatPercent(finalBasedProductCouponPercent) }} • equivalente de
-              cálculo: {{ formatPercent(effectiveProductCouponPercent) }}
-            </li>
+            <li>Cupom do produto: {{ formatPercent(productCouponPercent) }}</li>
             <li>
               Cupom loja:
               {{
                 form.includeStoreCoupon
-                  ? `ativo (${formatPercent(finalBasedStoreCouponPercent)} sobre final, equivalente ${formatPercent(effectiveStoreCouponPercent)})`
+                  ? `ativo (${formatPercent(storeCouponPercent)})`
                   : 'desativado'
               }}
             </li>

@@ -13,12 +13,3 @@ export function normalizePercentInput(value: number): number {
 
   return percent
 }
-
-export function finalBasedToListingDiscountPercent(value: number): number {
-  const normalized = normalizePercentInput(value)
-  if (normalized <= 0) {
-    return 0
-  }
-
-  return normalized / (1 + normalized)
-}
