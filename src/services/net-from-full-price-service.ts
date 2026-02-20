@@ -161,7 +161,7 @@ export function netFromFullPriceToCsv(results: NetFromFullPriceItemResult[]): st
       result.effectiveCommissionRate,
     ]
 
-    return row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')
+    return row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')
   })
 
   return [header, ...lines].join('\n')

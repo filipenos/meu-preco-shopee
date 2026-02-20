@@ -203,7 +203,7 @@ export function fullPriceFromTargetNetToCsv(results: FullPriceFromTargetNetItemR
       result.status,
     ]
 
-    return row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')
+    return row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')
   })
 
   return [header, ...lines].join('\n')
