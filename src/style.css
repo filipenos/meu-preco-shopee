@@ -78,6 +78,15 @@ p {
   text-decoration: underline;
 }
 
+.primary-link {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 1px solid #9ab4ec;
+  border-radius: 10px;
+  background: #e8f0ff;
+}
+
 .eyebrow {
   display: inline-block;
   padding: 6px 10px;
@@ -111,6 +120,11 @@ p {
 
 .full {
   grid-column: 1 / -1;
+}
+
+.product-value-card {
+  grid-column: 1 / -1;
+  order: -1;
 }
 
 .form-grid {

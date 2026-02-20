@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "typecheck": "vue-tsc -b",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.app.json && vue-tsc --noEmit -p tsconfig.node.json",
     "preview": "vite preview",
     "test": "vitest run",
     "helper:net-from-full-price": "vite-node scripts/net-from-full-price-helper.ts",
@@ -15,10 +15,12 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
-    "vue": "^3.4.0"
+    "vue": "^3.4.0",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.0",
+    "@types/node": "^22.19.11",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vue/tsconfig": "^0.4.0",
@@ -28,6 +30,6 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.0",
     "vitest": "^3.0.5",
-    "vue-tsc": "^1.8.25"
+    "vue-tsc": "^3.2.4"
   }
 }
