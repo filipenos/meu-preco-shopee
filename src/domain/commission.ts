@@ -99,42 +99,41 @@ export function calculateCommission(input: CommissionInput): CommissionResult {
   const bracket = findBracket(itemPrice, input.rules.brackets)
   const { fixedFee, cpfExtraFee } = resolveFixedFee({ ...input, itemPrice }, bracket)
 
-  const percentageAmount = roundMoney(itemPrice * bracket.percentageRate)
-  const fixedFeeAmount = roundMoney(fixedFee)
-  const cpfExtraFeeAmount = roundMoney(cpfExtraFee)
-
-  const baseCommissionAmount = roundMoney(percentageAmount + fixedFeeAmount + cpfExtraFeeAmount)
+  const rawPercentageAmount = itemPrice * bracket.percentageRate
+  const rawFixedFeeAmount = fixedFee
+  const rawCpfExtraFeeAmount = cpfExtraFee
+  const rawBaseCommissionAmount = rawPercentageAmount + rawFixedFeeAmount + rawCpfExtraFeeAmount
 
   const isPix = input.paymentMethod === 'pix'
   const pixSubsidyRate = isPix ? bracket.pixSubsidyRate : 0
-  const pixSubsidyAmount = roundMoney(isPix ? itemPrice * pixSubsidyRate : 0)
+  const rawPixSubsidyAmount = isPix ? itemPrice * pixSubsidyRate : 0
 
-  const commissionAmount = roundMoney(clampNonNegative(baseCommissionAmount - pixSubsidyAmount))
-  const itemInvoicePrice = roundMoney(clampNonNegative(itemPrice - pixSubsidyAmount))
+  const rawCommissionAmount = clampNonNegative(rawBaseCommissionAmount - rawPixSubsidyAmount)
+  const rawItemInvoicePrice = clampNonNegative(itemPrice - rawPixSubsidyAmount)
 
   const campaignExtraRate = input.includeCampaignExtra ? input.rules.campaignExtraRate : 0
-  const campaignExtraAmount = roundMoney(itemInvoicePrice * campaignExtraRate)
+  const rawCampaignExtraAmount = rawItemInvoicePrice * campaignExtraRate
 
-  const totalCommissionAmount = roundMoney(commissionAmount + campaignExtraAmount)
-  const netAmount = roundMoney(itemInvoicePrice - totalCommissionAmount)
+  const rawTotalCommissionAmount = rawCommissionAmount + rawCampaignExtraAmount
+  const rawNetAmount = rawItemInvoicePrice - rawTotalCommissionAmount
 
   return {
     itemPrice,
-    itemInvoicePrice,
+    itemInvoicePrice: roundMoney(rawItemInvoicePrice),
     sellerType: input.sellerType,
     paymentMethod: input.paymentMethod,
     bracket,
-    percentageAmount,
-    fixedFeeAmount,
-    cpfExtraFeeAmount,
-    baseCommissionAmount,
+    percentageAmount: roundMoney(rawPercentageAmount),
+    fixedFeeAmount: roundMoney(rawFixedFeeAmount),
+    cpfExtraFeeAmount: roundMoney(rawCpfExtraFeeAmount),
+    baseCommissionAmount: roundMoney(rawBaseCommissionAmount),
     pixSubsidyRate,
-    pixSubsidyAmount,
-    commissionAmount,
+    pixSubsidyAmount: roundMoney(rawPixSubsidyAmount),
+    commissionAmount: roundMoney(rawCommissionAmount),
     campaignExtraRate,
-    campaignExtraAmount,
-    totalCommissionAmount,
-    netAmount,
+    campaignExtraAmount: roundMoney(rawCampaignExtraAmount),
+    totalCommissionAmount: roundMoney(rawTotalCommissionAmount),
+    netAmount: roundMoney(rawNetAmount),
   }
 }
 

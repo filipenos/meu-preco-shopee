@@ -167,7 +167,7 @@ describe('calculateCommission', () => {
     expect(result.itemInvoicePrice).toBe(95)
     expect(result.campaignExtraAmount).toBe(2.38)
     expect(result.totalCommissionAmount).toBe(31.38)
-    expect(result.netAmount).toBe(63.62)
+    expect(result.netAmount).toBe(63.63)
   })
 })
 
