@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comissão Calculadora - Vigente até 28/02/2026</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+      :root {
+        --bg: #f2eee6;
+        --panel: #fff9ef;
+        --ink: #122026;
+        --muted: #4f5a5f;
+        --line: #c8d1ce;
+        --accent: #ef5b2a;
+        --accent-2: #0f8f7f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 15% 20%, #ffd9c8 0, rgba(255, 217, 200, 0) 38%),
+          radial-gradient(circle at 80% 0%, #bfe6df 0, rgba(191, 230, 223, 0) 42%),
+          var(--bg);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        width: min(980px, 92vw);
+        margin: 34px auto;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 10px 24px rgba(18, 32, 38, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: clamp(1.25rem, 2.6vw, 1.9rem);
+      }
+
+      .sub {
+        margin: 0 0 14px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      input,
+      select {
+        width: 100%;
+        font: inherit;
+        padding: 10px 11px;
+        border-radius: 10px;
+        border: 1.6px solid var(--line);
+        background: #fff;
+      }
+
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: #fff;
+        border: 1.6px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 11px;
+      }
+
+      .btn {
+        margin-top: 12px;
+        width: 100%;
+        border: 0;
+        border-radius: 11px;
+        padding: 12px;
+        font: 600 0.98rem 'Space Grotesk', sans-serif;
+        background: linear-gradient(135deg, var(--accent), #ff7f4c);
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .kpis {
+        display: grid;
+        gap: 10px;
+      }
+
+      .kpi {
+        border: 1.5px dashed var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .kpi .t {
+        color: var(--muted);
+        font-size: 0.84rem;
+        margin-bottom: 2px;
+      }
+
+      .kpi .v {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1.08rem;
+      }
+
+      .note {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .rules {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+
+      .rules h2 {
+        margin: 0 0 8px;
+        font-size: 0.98rem;
+      }
+
+      .rules ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .tag {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent-2);
+      }
+
+      @media (max-width: 860px) {
+        .wrap {
+          grid-template-columns: 1fr;
+          margin: 20px auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>Comissão Calculadora (vigente até 28/02/2026)</h1>
+        <p class="sub">
+          Regras antigas por referência oficial:
+          <a href="https://seller.shopee.com.br/edu/article/18483/como-funciona-a-politica-de-comissao-para-vendedores-shopee" target="_blank" rel="noreferrer">Como funciona a Política de Comissão para vendedores da Shopee?</a>
+          ·
+          <a href="https://seller.shopee.com.br/edu/article/18484/como-funciona-o-adicional-de-comissao-para-vendedores-CPF" target="_blank" rel="noreferrer">Como funciona o adicional de comissão para vendedores CPF?</a>
+        </p>
+
+        <div class="grid">
+          <div class="field">
+            <label for="preco">Preço do item (R$)</label>
+            <input id="preco" type="number" min="0" step="0.01" value="100" />
+          </div>
+
+          <div class="field">
+            <label for="tipo">Tipo de vendedor</label>
+            <select id="tipo">
+              <option value="cnpj">CNPJ</option>
+              <option value="cpf">CPF</option>
+            </select>
+          </div>
+
+          <div class="field" id="pedidosField">
+            <label for="pedidos90">Pedidos últimos 90 dias (CPF)</label>
+            <input id="pedidos90" type="number" min="0" step="1" value="0" />
+          </div>
+
+          <div class="field">
+            <label for="escopo">Escopo aplicado</label>
+            <input id="escopo" type="text" value="-" readonly />
+          </div>
+
+          <div class="field full">
+            <label class="check" for="freteGratis">
+              <input id="freteGratis" type="checkbox" />
+              Participa do Programa de Frete Grátis (+6%)
+            </label>
+          </div>
+
+          <div class="field full">
+            <label class="check" for="campanha">
+              <input id="campanha" type="checkbox" />
+              Aplicar Campanha de Destaque (+2,5%)
+            </label>
+          </div>
+
+          <div class="field full">
+            <label class="check" for="regra8">
+              <input id="regra8" type="checkbox" checked />
+              CNPJ: aplicar regra de item &lt; R$8 (adicional por item = metade do preço)
+            </label>
+          </div>
+        </div>
+
+        <button class="btn" id="calcular">Calcular</button>
+      </section>
+
+      <section class="card">
+        <div class="kpis">
+          <div class="kpi"><div class="t">Taxa percentual aplicada</div><div class="v" id="taxaPercentual">-</div></div>
+          <div class="kpi"><div class="t">Adicional por item</div><div class="v" id="addItem">-</div></div>
+          <div class="kpi"><div class="t">Adicional CPF</div><div class="v" id="addCpf">-</div></div>
+          <div class="kpi"><div class="t">Taxa de transporte (+6%)</div><div class="v" id="taxaTransporte">-</div></div>
+          <div class="kpi"><div class="t">Comissão base (com teto)</div><div class="v" id="base">-</div></div>
+          <div class="kpi"><div class="t">Campanha de destaque</div><div class="v" id="camp">-</div></div>
+          <div class="kpi"><div class="t">Comissão final</div><div class="v" id="final">-</div></div>
+          <div class="kpi"><div class="t">Valor líquido estimado</div><div class="v" id="liquido">-</div></div>
+        </div>
+
+        <span class="tag">Vigência estimada: até 28/02/2026</span>
+        <div class="note" id="premissas"></div>
+        <div class="rules">
+          <h2>Resumo das regras (até 28/02/2026)</h2>
+          <ul>
+            <li>CNPJ (18483): 12% + 2% (+6% com Frete Grátis) + R$4 por item; abaixo de R$8, item = metade do preço.</li>
+            <li>CPF (18484): acima de 450 pedidos em 90 dias adiciona R$3 (taxa por item vira R$7).</li>
+            <li>CPF (18484): abaixo de R$12 (quando acima de 450 pedidos), taxa por item é regressiva (ex.: R$10→R$6,50; R$8→R$6,00).</li>
+            <li>Teto da comissão base: CNPJ/R$4 = R$104; CPF/R$7 = R$107 (campanha pode aumentar total final).</li>
+            <li>Campanha de Destaque: +2,5% durante campanha ativa.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <script type="module">
+      import { calculateLegacyCommission } from './services/legacy-commission-service.js';
+
+      const el = (id) => document.getElementById(id);
+      const brl = (value) =>
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+      function calcular() {
+        const itemPrice = Number(el('preco').value || 0);
+        const sellerType = el('tipo').value;
+        const ordersLast90Days = Number(el('pedidos90').value || 0);
+        const includeFreteGratis = el('freteGratis').checked;
+        const includeCampaignExtra = el('campanha').checked;
+        const applyLowPriceRule = el('regra8').checked;
+
+        const result = calculateLegacyCommission({
+          itemPrice,
+          sellerType,
+          ordersLast90Days,
+          includeFreteGratis,
+          includeCampaignExtra,
+          applyLowPriceRule,
+        });
+
+        const showCpfFields = sellerType === 'cpf';
+        el('pedidosField').style.display = showCpfFields ? 'grid' : 'none';
+
+        el('escopo').value = result.scopeLabel;
+        el('taxaPercentual').textContent = `${(result.percentageRate * 100).toFixed(0)}% (${brl(result.percentageAmount)})`;
+        el('addItem').textContent = brl(result.itemFixedFee);
+        el('addCpf').textContent = brl(result.cpfExtraFee);
+        el('taxaTransporte').textContent = includeFreteGratis ? `${brl(result.transporteAmount)} (+6%)` : brl(0);
+        el('base').textContent = `${brl(result.baseCommission)} (teto ${brl(result.baseCap)})`;
+        el('camp').textContent = brl(result.campaignAmount);
+        el('final').textContent = brl(result.totalCommission);
+        el('liquido').textContent = brl(result.netAmount);
+
+        const cpfHint =
+          sellerType === 'cpf'
+            ? `CPF > 450 pedidos em 90 dias: ${result.hasCpfExtraFee ? 'sim' : 'não'}.`
+            : 'Regra de pedidos em 90 dias não se aplica a CNPJ.';
+
+        const lowPriceHint =
+          sellerType === 'cpf' && result.lowPriceRegressionApplied
+            ? 'Taxa regressiva CPF para item abaixo de R$12 aplicada.'
+            : sellerType === 'cnpj' && applyLowPriceRule && itemPrice < 8
+              ? 'Regra CNPJ de item abaixo de R$8 aplicada.'
+              : 'Sem regra especial de item barato aplicada.';
+
+        el('premissas').textContent = `${cpfHint} ${lowPriceHint}`;
+      }
+
+      ['preco', 'tipo', 'pedidos90', 'freteGratis', 'campanha', 'regra8'].forEach((id) => {
+        el(id).addEventListener('input', calcular);
+      });
+
+      el('calcular').addEventListener('click', calcular);
+      calcular();
+    </script>
+  </body>
+</html>

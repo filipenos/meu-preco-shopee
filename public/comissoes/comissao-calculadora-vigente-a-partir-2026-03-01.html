@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comissão Calculadora - Vigente a partir de 01/03/2026</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+      :root {
+        --bg: #f2eee6;
+        --panel: #fff9ef;
+        --ink: #122026;
+        --muted: #4f5a5f;
+        --line: #c8d1ce;
+        --accent: #ef5b2a;
+        --accent-2: #0f8f7f;
+        --ok: #0f8f7f;
+        --warn: #b3571f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 15% 20%, #ffd9c8 0, rgba(255, 217, 200, 0) 38%),
+          radial-gradient(circle at 80% 0%, #bfe6df 0, rgba(191, 230, 223, 0) 42%),
+          var(--bg);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        width: min(980px, 92vw);
+        margin: 34px auto;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 10px 24px rgba(18, 32, 38, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: clamp(1.25rem, 2.6vw, 1.9rem);
+      }
+
+      .sub {
+        margin: 0 0 14px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      input,
+      select {
+        width: 100%;
+        font: inherit;
+        padding: 10px 11px;
+        border-radius: 10px;
+        border: 1.6px solid var(--line);
+        background: #fff;
+      }
+
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: #fff;
+        border: 1.6px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 11px;
+      }
+
+      .btn {
+        margin-top: 12px;
+        width: 100%;
+        border: 0;
+        border-radius: 11px;
+        padding: 12px;
+        font: 600 0.98rem 'Space Grotesk', sans-serif;
+        background: linear-gradient(135deg, var(--accent), #ff7f4c);
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .kpis {
+        display: grid;
+        gap: 10px;
+      }
+
+      .kpi {
+        border: 1.5px dashed var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      .kpi .t {
+        color: var(--muted);
+        font-size: 0.84rem;
+        margin-bottom: 2px;
+      }
+
+      .kpi .v {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1.08rem;
+      }
+
+      .note {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .rules {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+
+      .rules h2 {
+        margin: 0 0 8px;
+        font-size: 0.98rem;
+      }
+
+      .rules ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .tag {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent-2);
+      }
+
+      @media (max-width: 860px) {
+        .wrap {
+          grid-template-columns: 1fr;
+          margin: 20px auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>Comissão Calculadora (vigente a partir de 01/03/2026)</h1>
+        <p class="sub">
+          Política nova por faixa, com subsídio Pix, adicional CPF e campanha.
+          Referência:
+          <a href="https://seller.shopee.com.br/edu/article/26839/Comissao-para-vendedores-CNPJ-e-CPF-em-2026" target="_blank" rel="noreferrer">Shopee 26839</a>.
+        </p>
+
+        <div class="grid">
+          <div class="field">
+            <label for="tipo">Tipo de vendedor</label>
+            <select id="tipo">
+              <option value="cnpj">CNPJ</option>
+              <option value="cpf">CPF</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="preco">Preço do item (R$)</label>
+            <input id="preco" type="number" min="0" step="0.01" value="500" />
+          </div>
+
+          <div class="field">
+            <label for="pagamento">Forma de pagamento</label>
+            <select id="pagamento">
+              <option value="outros">Cartão/Boleto/Outros</option>
+              <option value="pix">Pix</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="pedidos90">Pedidos últimos 90 dias (CPF)</label>
+            <input id="pedidos90" type="number" min="0" step="1" value="0" />
+          </div>
+
+          <div class="field full">
+            <label class="check" for="campanha">
+              <input id="campanha" type="checkbox" />
+              Aplicar Campanha de Destaque (+2,5%)
+            </label>
+          </div>
+
+          <div class="field full">
+            <label class="check" for="regra8">
+              <input id="regra8" type="checkbox" checked />
+              Aplicar regra de item &lt; R$8 (adicional por item = metade do preço)
+            </label>
+          </div>
+        </div>
+
+        <button class="btn" id="calcular">Calcular</button>
+      </section>
+
+      <section class="card">
+        <div class="kpis">
+          <div class="kpi">
+            <div class="t">Faixa aplicada</div>
+            <div class="v" id="faixa">-</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Comissão base</div>
+            <div class="v" id="base">-</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Adicional CPF</div>
+            <div class="v" id="addCpf">-</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Campanha de destaque</div>
+            <div class="v" id="camp">-</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Subsídio Pix</div>
+            <div class="v" id="subsidio">-</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Comissão final</div>
+            <div class="v" id="final">-</div>
+          </div>
+          <div class="kpi">
+            <div class="t">Valor líquido estimado</div>
+            <div class="v" id="liquido">-</div>
+          </div>
+        </div>
+
+        <span class="tag">Vigência estimada: a partir de 01/03/2026</span>
+
+        <div class="note" id="premissas"></div>
+        <div class="rules">
+          <h2>Resumo das regras (a partir de 01/03/2026)</h2>
+          <ul>
+            <li>Comissão por faixa: 20%+R$4 (até R$79,99) e 14% + fixo nas demais faixas.</li>
+            <li>Forma de pagamento: Pix aplica subsídio por faixa (5% ou 8%); cartão/boleto não aplica subsídio.</li>
+            <li>Pedidos em 90 dias (CPF): até 450 pedidos = sem adicional; acima de 450 = +R$3 por item.</li>
+            <li>Campanha de Destaque: +2,5% durante campanha ativa.</li>
+            <li>Regra especial para item abaixo de R$8: adicional por item = metade do preço.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const el = (id) => document.getElementById(id);
+      const brl = (value) =>
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+      function faixa(preco) {
+        if (preco <= 79.99) return { nome: 'Até R$79,99', pct: 0.2, fixo: 4, pix: 0 };
+        if (preco <= 99.99) return { nome: 'R$80 a R$99,99', pct: 0.14, fixo: 16, pix: 0.05 };
+        if (preco <= 199.99) return { nome: 'R$100 a R$199,99', pct: 0.14, fixo: 20, pix: 0.05 };
+        if (preco <= 499.99) return { nome: 'R$200 a R$499,99', pct: 0.14, fixo: 26, pix: 0.05 };
+        return { nome: 'Acima de R$500', pct: 0.14, fixo: 26, pix: 0.08 };
+      }
+
+      function calcular() {
+        const tipo = el('tipo').value;
+        const preco = Number(el('preco').value || 0);
+        const pagamento = el('pagamento').value;
+        const pedidos90 = Number(el('pedidos90').value || 0);
+        const campanha = el('campanha').checked;
+        const regra8 = el('regra8').checked;
+
+        const f = faixa(preco);
+        const percentual = f.pct * preco;
+
+        let adicionalItem = f.fixo;
+        if (regra8 && preco < 8) {
+          adicionalItem = preco / 2;
+        }
+
+        let adicionalCpf = 0;
+        if (tipo === 'cpf' && pedidos90 > 450) {
+          adicionalCpf = 3;
+        }
+
+        const base = percentual + adicionalItem;
+        const taxaCampanha = campanha ? preco * 0.025 : 0;
+        const subsidioPix = pagamento === 'pix' ? preco * f.pix : 0;
+
+        const total = Math.max(0, base + adicionalCpf + taxaCampanha - subsidioPix);
+        const liquido = preco - total;
+
+        el('faixa').textContent = f.nome;
+        el('base').textContent = brl(base) + ` (${(f.pct * 100).toFixed(0)}% + ${brl(adicionalItem)})`;
+        el('addCpf').textContent = brl(adicionalCpf);
+        el('camp').textContent = brl(taxaCampanha);
+        el('subsidio').textContent = `- ${brl(subsidioPix)}`;
+        el('final').textContent = brl(total);
+        el('liquido').textContent = brl(liquido);
+
+        el('premissas').innerHTML =
+          'Premissas usadas nesta V2: faixas da política Shopee 2026 (CNPJ/CPF), ' +
+          'subsídio Pix por faixa (5% ou 8%), adicional CPF de R$3 para lojas com mais de 450 pedidos/90 dias, ' +
+          'e adicional de campanha de 2,5% quando marcado.\n\n' +
+          'A regra de item abaixo de R$8 está aplicada como: adicional por item = metade do preço.';
+      }
+
+      el('calcular').addEventListener('click', calcular);
+      ['tipo', 'preco', 'pagamento', 'pedidos90', 'campanha', 'regra8'].forEach((id) => {
+        el(id).addEventListener('input', calcular);
+      });
+
+      calcular();
+    </script>
+  </body>
+</html>

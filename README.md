@@ -100,3 +100,12 @@ npm test
 
 - A interface permite ajustar parâmetros para simulações, mas o padrão inicial segue a política oficial publicada em 06/02/2026.
 - Para valores de item muito baixos, o projeto aplica as regras especiais de item barato conforme tipo de vendedor.
+
+## Arquivos de validade (apoio)
+
+- `public/comissoes/comissao-calculadora-vigente-ate-2026-02-28.html`
+  - Calculadora estática da política antiga (vigente até 28/02/2026).
+- `public/comissoes/comissao-calculadora-vigente-a-partir-2026-03-01.html`
+  - Calculadora estática da política nova (vigente a partir de 01/03/2026).
+- `shopee-comissao-politica-antiga-ate-2026-02-28.txt`
+  - Texto da política antiga (até 28/02/2026).

@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comparação de Comissões - Antiga vs Nova</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+      :root {
+        --bg: #f2eee6;
+        --panel: #fff9ef;
+        --ink: #122026;
+        --muted: #4f5a5f;
+        --line: #c8d1ce;
+        --accent: #ef5b2a;
+        --accent-2: #0f8f7f;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: 'Space Grotesk', sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 15% 20%, #ffd9c8 0, rgba(255, 217, 200, 0) 38%),
+          radial-gradient(circle at 80% 0%, #bfe6df 0, rgba(191, 230, 223, 0) 42%),
+          var(--bg);
+        min-height: 100vh;
+      }
+
+      .wrap { width: min(1080px, 92vw); margin: 28px auto; display: grid; gap: 16px; }
+
+      .card {
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 10px 24px rgba(18, 32, 38, 0.08);
+      }
+
+      h1, h2 { margin: 0 0 8px; }
+      .sub { margin: 0 0 12px; color: var(--muted); }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+      }
+
+      .field { display: grid; gap: 6px; }
+      .field.full { grid-column: 1 / -1; }
+
+      label { font-size: 0.88rem; color: var(--muted); }
+
+      input, select {
+        width: 100%;
+        font: inherit;
+        padding: 10px 11px;
+        border-radius: 10px;
+        border: 1.6px solid var(--line);
+        background: #fff;
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: 1.6px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px 11px;
+      }
+
+      .btn {
+        margin-top: 8px;
+        border: 0;
+        border-radius: 11px;
+        padding: 12px;
+        width: 100%;
+        font: 600 0.98rem 'Space Grotesk', sans-serif;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), #ff7f4c);
+        cursor: pointer;
+      }
+
+      .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+      .result-card { border: 1.6px solid var(--line); border-radius: 14px; padding: 12px; background: #fff; }
+      .kpi { border: 1.2px dashed var(--line); border-radius: 10px; padding: 9px; margin-bottom: 8px; }
+      .kpi .t { color: var(--muted); font-size: .82rem; }
+      .kpi .v { font: 600 1rem 'IBM Plex Mono', monospace; margin-top: 2px; }
+
+      .tag {
+        display: inline-block;
+        margin-bottom: 8px;
+        background: var(--accent-2);
+        color: #fff;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 600;
+      }
+
+      .delta {
+        border: 1.6px solid var(--line);
+        border-radius: 12px;
+        padding: 10px;
+        background: #fff;
+      }
+
+      @media (max-width: 920px) {
+        .form-grid { grid-template-columns: 1fr 1fr; }
+        .result-grid { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 620px) {
+        .form-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <h1>Comparação de Comissões: antiga vs nova</h1>
+        <p class="sub">Informe os dados uma vez e compare o resultado nas duas políticas lado a lado.</p>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="preco">Preço do item (R$)</label>
+            <input id="preco" type="number" min="0" step="0.01" value="100" />
+          </div>
+
+          <div class="field">
+            <label for="tipo">Tipo de vendedor</label>
+            <select id="tipo">
+              <option value="cnpj">CNPJ</option>
+              <option value="cpf">CPF</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="pagamento">Forma de pagamento</label>
+            <select id="pagamento">
+              <option value="outros">Cartão/Boleto/Outros</option>
+              <option value="pix">Pix</option>
+            </select>
+          </div>
+
+          <div class="field" id="pedidosField">
+            <label for="pedidos90">Pedidos últimos 90 dias (CPF)</label>
+            <input id="pedidos90" type="number" min="0" step="1" value="0" />
+          </div>
+
+          <div class="field full">
+            <label class="check" for="freteGratis">
+              <input id="freteGratis" type="checkbox" />
+              Política antiga: participa do Programa de Frete Grátis (+6%)
+            </label>
+          </div>
+
+          <div class="field full">
+            <label class="check" for="campanha">
+              <input id="campanha" type="checkbox" />
+              Aplicar Campanha de Destaque (+2,5%)
+            </label>
+          </div>
+
+          <div class="field full">
+            <label class="check" for="regra8">
+              <input id="regra8" type="checkbox" checked />
+              Aplicar regra especial de item barato (quando aplicável)
+            </label>
+          </div>
+        </div>
+
+        <button class="btn" id="calcular">Comparar</button>
+      </section>
+
+      <section class="result-grid">
+        <article class="result-card">
+          <span class="tag">Vigente até 28/02/2026</span>
+          <h2>Política antiga</h2>
+          <div class="kpi"><div class="t">Escopo</div><div class="v" id="oldScope">-</div></div>
+          <div class="kpi"><div class="t">Comissão base</div><div class="v" id="oldBase">-</div></div>
+          <div class="kpi"><div class="t">Campanha</div><div class="v" id="oldCamp">-</div></div>
+          <div class="kpi"><div class="t">Comissão total</div><div class="v" id="oldTotal">-</div></div>
+          <div class="kpi"><div class="t">Líquido estimado</div><div class="v" id="oldNet">-</div></div>
+        </article>
+
+        <article class="result-card">
+          <span class="tag">Vigente a partir de 01/03/2026</span>
+          <h2>Política nova</h2>
+          <div class="kpi"><div class="t">Escopo</div><div class="v" id="newScope">-</div></div>
+          <div class="kpi"><div class="t">Comissão base</div><div class="v" id="newBase">-</div></div>
+          <div class="kpi"><div class="t">Subsídio Pix</div><div class="v" id="newPix">-</div></div>
+          <div class="kpi"><div class="t">Comissão total</div><div class="v" id="newTotal">-</div></div>
+          <div class="kpi"><div class="t">Líquido estimado</div><div class="v" id="newNet">-</div></div>
+        </article>
+      </section>
+
+      <section class="delta">
+        <strong>Diferença (Nova - Antiga):</strong>
+        <span id="deltaSummary">-</span>
+      </section>
+    </main>
+
+    <script type="module">
+      import { calculateLegacyCommission } from './services/legacy-commission-service.js';
+      import { calculateNew2026Commission } from './services/new-2026-commission-service.js';
+
+      const el = (id) => document.getElementById(id);
+      const brl = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+      function compare() {
+        const input = {
+          itemPrice: Number(el('preco').value || 0),
+          sellerType: el('tipo').value,
+          paymentMethod: el('pagamento').value,
+          ordersLast90Days: Number(el('pedidos90').value || 0),
+          includeFreteGratis: el('freteGratis').checked,
+          includeCampaignExtra: el('campanha').checked,
+          applyLowPriceRule: el('regra8').checked,
+        };
+
+        const oldResult = calculateLegacyCommission(input);
+        const newResult = calculateNew2026Commission(input);
+
+        el('oldScope').textContent = oldResult.scopeLabel;
+        el('oldBase').textContent = brl(oldResult.baseCommission);
+        el('oldCamp').textContent = brl(oldResult.campaignAmount);
+        el('oldTotal').textContent = brl(oldResult.totalCommission);
+        el('oldNet').textContent = brl(oldResult.netAmount);
+
+        el('newScope').textContent = `${newResult.scopeLabel} • ${newResult.bracketName}`;
+        el('newBase').textContent = brl(newResult.baseCommission);
+        el('newPix').textContent = `- ${brl(newResult.pixSubsidyAmount)}`;
+        el('newTotal').textContent = brl(newResult.totalCommission);
+        el('newNet').textContent = brl(newResult.netAmount);
+
+        const deltaCommission = newResult.totalCommission - oldResult.totalCommission;
+        const deltaNet = newResult.netAmount - oldResult.netAmount;
+        const signCommission = deltaCommission >= 0 ? '+' : '';
+        const signNet = deltaNet >= 0 ? '+' : '';
+
+        el('deltaSummary').textContent =
+          `Comissão ${signCommission}${brl(deltaCommission)} | Líquido ${signNet}${brl(deltaNet)}`;
+
+        el('pedidosField').style.display = input.sellerType === 'cpf' ? 'grid' : 'none';
+      }
+
+      ['preco', 'tipo', 'pagamento', 'pedidos90', 'freteGratis', 'campanha', 'regra8'].forEach((id) => {
+        el(id).addEventListener('input', compare);
+      });
+
+      el('calcular').addEventListener('click', compare);
+      compare();
+    </script>
+  </body>
+</html>
