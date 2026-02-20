@@ -69,6 +69,106 @@ describe('calculateCommission', () => {
     expect(result.percentageAmount).toBe(1.2)
     expect(result.totalCommissionAmount).toBe(4.2)
   })
+
+  it('respeita troca de faixa entre R$79,99 e R$80,00', () => {
+    const at7999 = service.calculateFromItemPrice({
+      itemPrice: 79.99,
+      sellerType: 'cnpj',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 0,
+      includeCampaignExtra: false,
+    })
+
+    const at80 = service.calculateFromItemPrice({
+      itemPrice: 80,
+      sellerType: 'cnpj',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 0,
+      includeCampaignExtra: false,
+    })
+
+    expect(at7999.bracket.fixedFee).toBe(4)
+    expect(at80.bracket.fixedFee).toBe(16)
+  })
+
+  it('aplica adicional CPF apenas acima de 450 pedidos em 90 dias', () => {
+    const at450 = service.calculateFromItemPrice({
+      itemPrice: 120,
+      sellerType: 'cpf',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 450,
+      includeCampaignExtra: false,
+    })
+
+    const at451 = service.calculateFromItemPrice({
+      itemPrice: 120,
+      sellerType: 'cpf',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 451,
+      includeCampaignExtra: false,
+    })
+
+    expect(at450.cpfExtraFeeAmount).toBe(0)
+    expect(at451.cpfExtraFeeAmount).toBe(3)
+  })
+
+  it('aplica taxa regressiva de CPF abaixo de R$12 conforme limite de pedidos', () => {
+    const withoutExtra = service.calculateFromItemPrice({
+      itemPrice: 10,
+      sellerType: 'cpf',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 0,
+      includeCampaignExtra: false,
+    })
+
+    const withExtra = service.calculateFromItemPrice({
+      itemPrice: 10,
+      sellerType: 'cpf',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 451,
+      includeCampaignExtra: false,
+    })
+
+    expect(withoutExtra.fixedFeeAmount).toBe(3.5)
+    expect(withExtra.fixedFeeAmount).toBe(6.5)
+    expect(withExtra.cpfExtraFeeAmount).toBe(0)
+  })
+
+  it('mantém líquido igual para Pix e cartão quando não há campanha', () => {
+    const card = service.calculateFromItemPrice({
+      itemPrice: 500,
+      sellerType: 'cnpj',
+      paymentMethod: 'card_or_boleto',
+      ordersLast90Days: 0,
+      includeCampaignExtra: false,
+    })
+
+    const pix = service.calculateFromItemPrice({
+      itemPrice: 500,
+      sellerType: 'cnpj',
+      paymentMethod: 'pix',
+      ordersLast90Days: 0,
+      includeCampaignExtra: false,
+    })
+
+    expect(card.netAmount).toBe(404)
+    expect(pix.netAmount).toBe(404)
+  })
+
+  it('aplica campanha de 2,5% sobre itemInvoicePrice (após subsídio Pix)', () => {
+    const result = service.calculateFromItemPrice({
+      itemPrice: 100,
+      sellerType: 'cnpj',
+      paymentMethod: 'pix',
+      ordersLast90Days: 0,
+      includeCampaignExtra: true,
+    })
+
+    expect(result.itemInvoicePrice).toBe(95)
+    expect(result.campaignExtraAmount).toBe(2.38)
+    expect(result.totalCommissionAmount).toBe(31.38)
+    expect(result.netAmount).toBe(63.62)
+  })
 })
 
 describe('calculateRequiredItemPrice', () => {

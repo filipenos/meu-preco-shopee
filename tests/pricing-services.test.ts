@@ -10,6 +10,7 @@ import {
   fullPriceFromTargetNetToCsv,
 } from '../src/services/full-price-from-target-net-service'
 import { calculateNetFromFullPrice, netFromFullPriceToCsv } from '../src/services/net-from-full-price-service'
+import { calculateProductValueFromCostAndTargetProfit } from '../src/services/product-value-from-cost-and-target-profit-service'
 
 const cpfContext = {
   sellerType: 'cpf' as const,
@@ -325,5 +326,83 @@ describe('full-price-from-target-net service', () => {
 
     expect(csv).toContain('requiredFullPrice')
     expect(csv).toContain('"ok"')
+  })
+})
+
+describe('product-value-from-cost-and-target-profit service', () => {
+  it('uses target net as cost plus target profit', () => {
+    const productCost = 10
+    const targetProfit = 20
+    const result = calculateProductValueFromCostAndTargetProfit({
+      context: cnpjContext,
+      items: [
+        {
+          variationName: 'sku',
+          productCost,
+          targetProfit,
+          productCouponPercent: 0,
+        },
+      ],
+    })[0]
+
+    expect(result.targetNetAmount).toBe(30)
+    expect(result.netAmount).toBeGreaterThanOrEqual(result.targetNetAmount)
+    expect(result.profitAfterCost).toBeCloseTo(result.netAmount - productCost, 2)
+    expect(result.profitDiffToTarget).toBeCloseTo(result.profitAfterCost - targetProfit, 2)
+  })
+
+  it('normalizes product coupon percent and returns pix subsidy breakdown', () => {
+    const result = calculateProductValueFromCostAndTargetProfit({
+      context: {
+        sellerType: 'cnpj',
+        paymentMethod: 'pix',
+      },
+      items: [
+        {
+          variationName: 'sku',
+          productCost: 0,
+          targetProfit: 10,
+          productCouponPercent: 150,
+        },
+      ],
+    })[0]
+
+    expect(result.productCouponPercent).toBe(1)
+    expect(result.pixSubsidyAmount).toBeGreaterThanOrEqual(0)
+  })
+
+  it('preserves target-too-high status for unreachable scenario', () => {
+    const result = calculateProductValueFromCostAndTargetProfit({
+      context: cnpjContext,
+      items: [
+        {
+          variationName: 'unreachable',
+          productCost: 100,
+          targetProfit: 1,
+          productCouponPercent: 100,
+        },
+      ],
+    })[0]
+
+    expect(result.status).toBe('target-too-high')
+  })
+
+  it('treats null and invalid values as zero', () => {
+    const result = calculateProductValueFromCostAndTargetProfit({
+      context: cnpjContext,
+      items: [
+        {
+          variationName: 'normalize-null',
+          productCost: null as unknown as number,
+          targetProfit: Number.NaN,
+          productCouponPercent: null as unknown as number,
+        },
+      ],
+    })[0]
+
+    expect(result.productCost).toBe(0)
+    expect(result.targetProfit).toBe(0)
+    expect(result.targetNetAmount).toBe(0)
+    expect(result.productCouponPercent).toBe(0)
   })
 })
