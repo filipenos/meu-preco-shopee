@@ -1,0 +1,18 @@
+Fonte oficial: https://seller.shopee.com.br/edu/article/26839/Comissao-para-vendedores-CNPJ-e-CPF-em-2026
+
+Data de captura: 20/02/2026
+Vigencia da politica usada no projeto: 01/03/2026
+
+Resumo operacional consolidado nesta referencia:
+- Faixas CNPJ/CPF:
+  - ate R$79,99: 20% + R$4
+  - R$80 a R$99,99: 14% + R$16 (Pix: 5%)
+  - R$100 a R$199,99: 14% + R$20 (Pix: 5%)
+  - R$200 a R$499,99: 14% + R$26 (Pix: 5%)
+  - acima de R$500: 14% + R$26 (Pix: 8%)
+- CPF: adicional de R$3 por item quando pedidos em 90 dias > 450.
+- CNPJ com item abaixo de R$8: taxa fixa = metade do preco do item.
+- CPF com item abaixo de R$12: taxa regressiva por pontos.
+- Campanha de destaque: 2,5%.
+
+Observacao: a pagina oficial usa aplicacao SPA. O arquivo policy-source.html armazena o snapshot HTML retornado em 20/02/2026.

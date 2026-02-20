@@ -1,0 +1,10 @@
+{
+  "article": 18483,
+  "percentageRate": 0.14,
+  "transportRateWhenFreteGratis": 0.06,
+  "campaignExtraRate": 0.025,
+  "baseCap": 104,
+  "fixedFeeDefault": 4,
+  "cnpjLowPriceThreshold": 8,
+  "cnpjLowPriceMode": "fixedFeeIsHalfPriceWhenEnabled"
+}

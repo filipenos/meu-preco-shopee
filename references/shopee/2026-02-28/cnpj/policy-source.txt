@@ -1,0 +1,15 @@
+Fonte oficial CNPJ (artigo 18483):
+https://seller.shopee.com.br/edu/article/18483/como-funciona-a-politica-de-comissao-para-vendedores-shopee
+
+Data de captura: 20/02/2026
+Vigencia alvo: ate 28/02/2026
+
+Resumo operacional (baseline legado deste projeto):
+- Percentual base: 14%
+- Frete gratis (quando habilitado): +6%
+- Taxa fixa padrao: R$4
+- Teto de base: R$104
+- Campanha de destaque: +2,5%
+- Regra opcional de item barato: para item abaixo de R$8 com regra habilitada, taxa fixa = metade do preco
+
+Observacao: o snapshot bruto da URL esta em `policy-source.html`.

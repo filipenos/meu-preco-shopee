@@ -1,0 +1,122 @@
+[
+  {
+    "id": "cpf_100_orders_0_no_frete_no_campaign",
+    "input": {
+      "itemPrice": 100,
+      "ordersLast90Days": 0,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 14.000000000000002,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 0,
+      "hasCpfExtraFee": false,
+      "lowPriceRegressionApplied": false,
+      "baseCommission": 18,
+      "baseCap": 104,
+      "campaignAmount": 0,
+      "totalCommission": 18,
+      "netAmount": 82,
+      "transporteAmount": 0,
+      "scopeLabel": "CPF (artigo 18484)"
+    }
+  },
+  {
+    "id": "cpf_100_orders_451_no_frete_no_campaign",
+    "input": {
+      "itemPrice": 100,
+      "ordersLast90Days": 451,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 14.000000000000002,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 3,
+      "hasCpfExtraFee": true,
+      "lowPriceRegressionApplied": false,
+      "baseCommission": 21,
+      "baseCap": 107,
+      "campaignAmount": 0,
+      "totalCommission": 21,
+      "netAmount": 79,
+      "transporteAmount": 0,
+      "scopeLabel": "CPF (artigo 18484)"
+    }
+  },
+  {
+    "id": "cpf_10_orders_451_regression",
+    "input": {
+      "itemPrice": 10,
+      "ordersLast90Days": 451,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 1.4000000000000001,
+      "itemFixedFee": 6.5,
+      "cpfExtraFee": 0,
+      "hasCpfExtraFee": true,
+      "lowPriceRegressionApplied": true,
+      "baseCommission": 7.9,
+      "baseCap": 107,
+      "campaignAmount": 0,
+      "totalCommission": 7.9,
+      "netAmount": 2.0999999999999996,
+      "transporteAmount": 0,
+      "scopeLabel": "CPF (artigo 18484)"
+    }
+  },
+  {
+    "id": "cpf_10_orders_0_no_regression",
+    "input": {
+      "itemPrice": 10,
+      "ordersLast90Days": 0,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 1.4000000000000001,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 0,
+      "hasCpfExtraFee": false,
+      "lowPriceRegressionApplied": false,
+      "baseCommission": 5.4,
+      "baseCap": 104,
+      "campaignAmount": 0,
+      "totalCommission": 5.4,
+      "netAmount": 4.6,
+      "transporteAmount": 0,
+      "scopeLabel": "CPF (artigo 18484)"
+    }
+  },
+  {
+    "id": "cpf_500_orders_451_with_frete_campaign",
+    "input": {
+      "itemPrice": 500,
+      "ordersLast90Days": 451,
+      "includeFreteGratis": true,
+      "includeCampaignExtra": true
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 70,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 3,
+      "hasCpfExtraFee": true,
+      "lowPriceRegressionApplied": false,
+      "baseCommission": 107,
+      "baseCap": 107,
+      "campaignAmount": 12.5,
+      "totalCommission": 119.5,
+      "netAmount": 380.5,
+      "transporteAmount": 30,
+      "scopeLabel": "CPF (artigo 18484)"
+    }
+  }
+]

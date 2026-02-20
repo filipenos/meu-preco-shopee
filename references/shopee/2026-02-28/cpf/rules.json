@@ -1,0 +1,22 @@
+{
+  "article": 18484,
+  "percentageRate": 0.14,
+  "transportRateWhenFreteGratis": 0.06,
+  "campaignExtraRate": 0.025,
+  "baseCapWithoutCpfExtraFee": 104,
+  "baseCapWithCpfExtraFee": 107,
+  "fixedFeeDefault": 4,
+  "cpfExtraFee": 3,
+  "cpfExtraOrdersThreshold90d": 450,
+  "cpfLowPriceThreshold": 12,
+  "cpfLowPriceWithExtraFeePoints": [
+    {
+      "price": 8,
+      "fixedFee": 6
+    },
+    {
+      "price": 12,
+      "fixedFee": 7
+    }
+  ]
+}

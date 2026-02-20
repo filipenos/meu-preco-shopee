@@ -1,0 +1,292 @@
+[
+  {
+    "id": "cnpj_card_500_no_campaign",
+    "input": {
+      "itemPrice": 500,
+      "sellerType": "cnpj",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 500,
+        "max": null,
+        "percentageRate": 0.14,
+        "fixedFee": 26,
+        "pixSubsidyRate": 0.08
+      },
+      "percentageAmount": 70,
+      "fixedFeeAmount": 26,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 96,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 500,
+      "commissionAmount": 96,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 96,
+      "netAmount": 404
+    }
+  },
+  {
+    "id": "cnpj_pix_500_no_campaign",
+    "input": {
+      "itemPrice": 500,
+      "sellerType": "cnpj",
+      "paymentMethod": "pix",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 500,
+        "max": null,
+        "percentageRate": 0.14,
+        "fixedFee": 26,
+        "pixSubsidyRate": 0.08
+      },
+      "percentageAmount": 70,
+      "fixedFeeAmount": 26,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 96,
+      "pixSubsidyAmount": 40,
+      "itemInvoicePrice": 460,
+      "commissionAmount": 56,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 56,
+      "netAmount": 404
+    }
+  },
+  {
+    "id": "cnpj_pix_100_with_campaign",
+    "input": {
+      "itemPrice": 100,
+      "sellerType": "cnpj",
+      "paymentMethod": "pix",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": true
+    },
+    "expected": {
+      "bracket": {
+        "min": 100,
+        "max": 199.99,
+        "percentageRate": 0.14,
+        "fixedFee": 20,
+        "pixSubsidyRate": 0.05
+      },
+      "percentageAmount": 14,
+      "fixedFeeAmount": 20,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 34,
+      "pixSubsidyAmount": 5,
+      "itemInvoicePrice": 95,
+      "commissionAmount": 29,
+      "campaignExtraAmount": 2.38,
+      "totalCommissionAmount": 31.38,
+      "netAmount": 63.63
+    }
+  },
+  {
+    "id": "cnpj_card_7_low_price_rule",
+    "input": {
+      "itemPrice": 7,
+      "sellerType": "cnpj",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 0,
+        "max": 79.99,
+        "percentageRate": 0.2,
+        "fixedFee": 4,
+        "pixSubsidyRate": 0
+      },
+      "percentageAmount": 1.4,
+      "fixedFeeAmount": 3.5,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 4.9,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 7,
+      "commissionAmount": 4.9,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 4.9,
+      "netAmount": 2.1
+    }
+  },
+  {
+    "id": "cpf_card_100_orders_450",
+    "input": {
+      "itemPrice": 100,
+      "sellerType": "cpf",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 450,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 100,
+        "max": 199.99,
+        "percentageRate": 0.14,
+        "fixedFee": 20,
+        "pixSubsidyRate": 0.05
+      },
+      "percentageAmount": 14,
+      "fixedFeeAmount": 20,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 34,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 100,
+      "commissionAmount": 34,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 34,
+      "netAmount": 66
+    }
+  },
+  {
+    "id": "cpf_card_100_orders_451",
+    "input": {
+      "itemPrice": 100,
+      "sellerType": "cpf",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 451,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 100,
+        "max": 199.99,
+        "percentageRate": 0.14,
+        "fixedFee": 20,
+        "pixSubsidyRate": 0.05
+      },
+      "percentageAmount": 14,
+      "fixedFeeAmount": 20,
+      "cpfExtraFeeAmount": 3,
+      "baseCommissionAmount": 37,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 100,
+      "commissionAmount": 37,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 37,
+      "netAmount": 63
+    }
+  },
+  {
+    "id": "cpf_card_10_orders_0_low_price_regression",
+    "input": {
+      "itemPrice": 10,
+      "sellerType": "cpf",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 0,
+        "max": 79.99,
+        "percentageRate": 0.2,
+        "fixedFee": 4,
+        "pixSubsidyRate": 0
+      },
+      "percentageAmount": 2,
+      "fixedFeeAmount": 3.5,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 5.5,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 10,
+      "commissionAmount": 5.5,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 5.5,
+      "netAmount": 4.5
+    }
+  },
+  {
+    "id": "cpf_card_10_orders_451_low_price_regression",
+    "input": {
+      "itemPrice": 10,
+      "sellerType": "cpf",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 451,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 0,
+        "max": 79.99,
+        "percentageRate": 0.2,
+        "fixedFee": 4,
+        "pixSubsidyRate": 0
+      },
+      "percentageAmount": 2,
+      "fixedFeeAmount": 6.5,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 8.5,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 10,
+      "commissionAmount": 8.5,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 8.5,
+      "netAmount": 1.5
+    }
+  },
+  {
+    "id": "cnpj_card_79_99_boundary",
+    "input": {
+      "itemPrice": 79.99,
+      "sellerType": "cnpj",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 0,
+        "max": 79.99,
+        "percentageRate": 0.2,
+        "fixedFee": 4,
+        "pixSubsidyRate": 0
+      },
+      "percentageAmount": 16,
+      "fixedFeeAmount": 4,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 20,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 79.99,
+      "commissionAmount": 20,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 20,
+      "netAmount": 59.99
+    }
+  },
+  {
+    "id": "cnpj_card_80_boundary",
+    "input": {
+      "itemPrice": 80,
+      "sellerType": "cnpj",
+      "paymentMethod": "card_or_boleto",
+      "ordersLast90Days": 0,
+      "includeCampaignExtra": false
+    },
+    "expected": {
+      "bracket": {
+        "min": 80,
+        "max": 99.99,
+        "percentageRate": 0.14,
+        "fixedFee": 16,
+        "pixSubsidyRate": 0.05
+      },
+      "percentageAmount": 11.2,
+      "fixedFeeAmount": 16,
+      "cpfExtraFeeAmount": 0,
+      "baseCommissionAmount": 27.2,
+      "pixSubsidyAmount": 0,
+      "itemInvoicePrice": 80,
+      "commissionAmount": 27.2,
+      "campaignExtraAmount": 0,
+      "totalCommissionAmount": 27.2,
+      "netAmount": 52.8
+    }
+  }
+]

@@ -1,0 +1,90 @@
+[
+  {
+    "id": "cnpj_100_no_frete_no_campaign",
+    "input": {
+      "itemPrice": 100,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false,
+      "applyLowPriceRule": true
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 14.000000000000002,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 0,
+      "baseCommission": 18,
+      "baseCap": 104,
+      "campaignAmount": 0,
+      "totalCommission": 18,
+      "netAmount": 82,
+      "transporteAmount": 0,
+      "scopeLabel": "CNPJ (artigo 18483)"
+    }
+  },
+  {
+    "id": "cnpj_7_with_low_price_rule",
+    "input": {
+      "itemPrice": 7,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false,
+      "applyLowPriceRule": true
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 0.9800000000000001,
+      "itemFixedFee": 3.5,
+      "cpfExtraFee": 0,
+      "baseCommission": 4.48,
+      "baseCap": 104,
+      "campaignAmount": 0,
+      "totalCommission": 4.48,
+      "netAmount": 2.5199999999999996,
+      "transporteAmount": 0,
+      "scopeLabel": "CNPJ (artigo 18483)"
+    }
+  },
+  {
+    "id": "cnpj_7_without_low_price_rule",
+    "input": {
+      "itemPrice": 7,
+      "includeFreteGratis": false,
+      "includeCampaignExtra": false,
+      "applyLowPriceRule": false
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 0.9800000000000001,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 0,
+      "baseCommission": 4.98,
+      "baseCap": 104,
+      "campaignAmount": 0,
+      "totalCommission": 4.98,
+      "netAmount": 2.0199999999999996,
+      "transporteAmount": 0,
+      "scopeLabel": "CNPJ (artigo 18483)"
+    }
+  },
+  {
+    "id": "cnpj_500_with_frete_campaign",
+    "input": {
+      "itemPrice": 500,
+      "includeFreteGratis": true,
+      "includeCampaignExtra": true,
+      "applyLowPriceRule": true
+    },
+    "expected": {
+      "percentageRate": 0.14,
+      "percentageAmount": 70,
+      "itemFixedFee": 4,
+      "cpfExtraFee": 0,
+      "baseCommission": 104,
+      "baseCap": 104,
+      "campaignAmount": 12.5,
+      "totalCommission": 116.5,
+      "netAmount": 383.5,
+      "transporteAmount": 30,
+      "scopeLabel": "CNPJ (artigo 18483)"
+    }
+  }
+]
