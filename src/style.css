@@ -78,6 +78,12 @@ p {
   text-decoration: underline;
 }
 
+.hero-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .primary-link {
   display: inline-block;
   margin-top: 4px;
@@ -159,6 +165,10 @@ p {
 
 .full {
   grid-column: 1 / -1;
+}
+
+.table-first {
+  order: -1;
 }
 
 .product-value-card {
@@ -255,6 +265,92 @@ select {
   display: grid;
   gap: 4px;
   color: var(--ink-1);
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.table-actions button,
+.danger-btn {
+  border: 1px solid #b5c8f0;
+  border-radius: 10px;
+  background: #edf3ff;
+  color: #1e437f;
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.table-actions button:hover,
+.danger-btn:hover {
+  background: #dde9ff;
+}
+
+.danger-btn {
+  border-color: #e6b7b7;
+  background: #ffefef;
+  color: #873333;
+}
+
+.danger-btn:hover {
+  background: #ffdede;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid #d8dfce;
+  border-radius: 12px;
+}
+
+.pricing-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.pricing-table th,
+.pricing-table td {
+  border-bottom: 1px solid #e0e7d6;
+  padding: 8px;
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.pricing-table th {
+  background: #f6faef;
+  font-size: 0.82rem;
+  color: #4f655d;
+}
+
+.pricing-table td {
+  font-size: 0.9rem;
+}
+
+.pricing-table td input {
+  min-width: 120px;
+}
+
+.status-pill {
+  display: inline-block;
+  border: 1px solid #c9dbd1;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eff8f2;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3a5f50;
+}
+
+.empty-table {
+  padding: 12px;
+  color: #5d7169;
 }
 
 .rates-grid {
@@ -364,5 +460,10 @@ select {
   .rates-grid,
   .notice-grid {
     grid-template-columns: 1fr;
+  }
+
+  .table-actions {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

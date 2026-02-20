@@ -102,8 +102,9 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
         Página exclusiva para calcular o preço que deve ser cadastrado no produto da Shopee com base em custo, lucro
         desejado e cupons.
       </p>
-      <p>
+      <p class="hero-links">
         <router-link class="primary-link" to="/">Voltar para página principal</router-link>
+        <router-link class="primary-link" to="/calcular-varios-produtos">Ir para vários produtos</router-link>
       </p>
     </section>
 

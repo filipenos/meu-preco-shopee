@@ -221,8 +221,9 @@ function resetRulesConfig(): void {
           Confira como funcionará a nova política de comissão para vendedores CNPJ e CPF em 2026
         </a>
       </p>
-      <p>
-        <router-link class="primary-link" to="/calcular-valor-produto">Abrir página exclusiva: Calcular valor do produto</router-link>
+      <p class="hero-links">
+        <router-link class="primary-link" to="/calcular-valor-produto">Página unitária</router-link>
+        <router-link class="primary-link" to="/calcular-varios-produtos">Página para vários produtos</router-link>
       </p>
     </section>
 
