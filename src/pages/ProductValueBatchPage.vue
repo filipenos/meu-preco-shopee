@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 
 import type { PaymentMethod, SellerType } from '../domain/types'
+import { finalBasedToListingDiscountPercent } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getProductValueRuleVisibility } from './product-value-rule-visibility'
 import {
@@ -51,6 +52,7 @@ const cpfOrdersThresholdLabel = computed(() => rulesConfig.cpfExtraOrdersThresho
 const cnpjLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cnpjLowPriceThreshold))
 const cpfLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cpfLowPriceThreshold))
 const showCouponFields = computed(() => form.includeStoreCoupon)
+const effectiveProductCouponPercent = computed(() => finalBasedToListingDiscountPercent(form.productCouponPercent))
 
 const serviceRulesConfig = computed(() => ({
   campaignExtraRate: rulesConfig.campaignExtraRatePercent / 100,
@@ -75,7 +77,7 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
 
   return {
     minPrice: safeMoney(storeCouponConfig.minPrice),
-    rate: safeMoney(storeCouponConfig.ratePercent) / 100,
+    rate: finalBasedToListingDiscountPercent(safeMoney(storeCouponConfig.ratePercent)),
     maxDiscount: safeMoney(storeCouponConfig.maxDiscount),
   }
 }
@@ -93,7 +95,7 @@ const rowResults = computed(() => {
       variationName: row.name || `Produto ${row.id}`,
       productCost: safeMoney(row.productCost),
       targetProfit: safeMoney(row.targetProfit),
-      productCouponPercent: safeMoney(form.productCouponPercent),
+      productCouponPercent: effectiveProductCouponPercent.value,
     })),
     rulesConfig: serviceRulesConfig.value,
   })
@@ -110,7 +112,7 @@ function createEmptyResult(row: ProductRow): ProductValueFromCostItemResult {
     productCost: safeMoney(row.productCost),
     targetProfit: safeMoney(row.targetProfit),
     targetNetAmount: safeMoney(row.productCost) + safeMoney(row.targetProfit),
-    productCouponPercent: safeMoney(form.productCouponPercent) / 100,
+    productCouponPercent: effectiveProductCouponPercent.value,
     requiredFullPrice: 0,
     discountedPrice: 0,
     couponApplied: false,
@@ -151,8 +153,8 @@ function removeRow(id: number): void {
       <h1>Calcular valor para vários produtos</h1>
       <p>Tabela para ajustar custo e lucro líquido por item, com cálculo em tempo real do preço de cadastro na Shopee.</p>
       <p class="hero-links">
-        <router-link class="primary-link" to="/">Início</router-link>
-        <router-link class="primary-link" to="/calcular-valor-produto">Página unitária</router-link>
+        <router-link class="primary-link" to="/">Ir para início (simulador geral)</router-link>
+        <router-link class="primary-link" to="/calcular-valor-produto">Ir para cálculo de 1 produto</router-link>
       </p>
     </section>
 
@@ -194,10 +196,11 @@ function removeRow(id: number): void {
         <section class="input-block">
           <div class="input-block-header">
             <h3>3. Descontos</h3>
+            <p>Cupom do produto é informado sobre o preço final e convertido para o equivalente de cálculo.</p>
           </div>
           <div class="form-grid">
             <label>
-              Cupom do produto (%) - global
+              Cupom do produto (% sobre preço final) - global
               <input v-model.number="form.productCouponPercent" type="number" min="0" max="100" step="0.01" />
             </label>
             <label class="inline-check">
@@ -206,7 +209,7 @@ function removeRow(id: number): void {
             </label>
             <template v-if="showCouponFields">
               <label>
-                Cupom da loja (%)
+                Cupom da loja (% sobre preço final)
                 <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
               </label>
               <label>
@@ -262,6 +265,9 @@ function removeRow(id: number): void {
         <p class="card-subtitle">
           Edite custo e lucro líquido desejado por linha. O sistema calcula o preço de cadastro e demais métricas.
         </p>
+        <p class="card-subtitle">
+          Com lucro alvo fixo, o cupom da loja aumenta o preço de cadastro para manter o líquido desejado.
+        </p>
 
         <div class="table-wrap">
           <table class="pricing-table">
@@ -272,6 +278,7 @@ function removeRow(id: number): void {
                 <th>Lucro líquido</th>
                 <th>Preço cadastro</th>
                 <th>Preço comprador</th>
+                <th>Cupom</th>
                 <th>Comissão</th>
                 <th>Líquido</th>
                 <th>Diferença</th>
@@ -292,6 +299,7 @@ function removeRow(id: number): void {
                 </td>
                 <td>{{ formatCurrency(item.result.requiredFullPrice) }}</td>
                 <td>{{ formatCurrency(item.result.finalBuyerPrice) }}</td>
+                <td>{{ formatCurrency(item.result.couponDiscountAmount) }}</td>
                 <td>{{ formatCurrency(item.result.commissionAmount) }}</td>
                 <td>{{ formatCurrency(item.result.netAmount) }}</td>
                 <td>{{ formatCurrency(item.result.netDiffToTarget) }}</td>

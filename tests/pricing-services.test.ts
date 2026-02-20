@@ -405,4 +405,38 @@ describe('product-value-from-cost-and-target-profit service', () => {
     expect(result.targetNetAmount).toBe(0)
     expect(result.productCouponPercent).toBe(0)
   })
+
+  it('increases required listing price when store coupon is enabled for the same net target', () => {
+    const baseInput = {
+      context: {
+        sellerType: 'cnpj' as const,
+        paymentMethod: 'card_or_boleto' as const,
+      },
+      items: [
+        {
+          variationName: 'coupon-check',
+          productCost: 202,
+          targetProfit: 202,
+          productCouponPercent: 0,
+        },
+      ],
+    }
+
+    const withoutCoupon = calculateProductValueFromCostAndTargetProfit(baseInput)[0]
+    const withCoupon = calculateProductValueFromCostAndTargetProfit({
+      ...baseInput,
+      context: {
+        ...baseInput.context,
+        storeCoupon: {
+          minPrice: 30,
+          rate: 0.03,
+          maxDiscount: 3,
+        },
+      },
+    })[0]
+
+    expect(withCoupon.requiredFullPrice).toBeGreaterThan(withoutCoupon.requiredFullPrice)
+    expect(withCoupon.couponDiscountAmount).toBeGreaterThan(0)
+    expect(withCoupon.netAmount).toBeGreaterThanOrEqual(withCoupon.targetNetAmount)
+  })
 })

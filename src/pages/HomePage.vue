@@ -4,6 +4,7 @@ import { inject } from '@vercel/analytics'
 
 import { defaultCommissionRules2026 } from '../domain/default-rules'
 import type { CommissionRules, PaymentMethod, SellerType } from '../domain/types'
+import { finalBasedToListingDiscountPercent, normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getCommissionFromItemPrice } from '../use-cases/get-commission-from-item-price'
 import { calculateFullPriceFromTargetNet } from '../services/full-price-from-target-net-service'
@@ -97,7 +98,7 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
 
   return {
     minPrice: storeCouponConfig.minPrice,
-    rate: storeCouponConfig.ratePercent / 100,
+    rate: finalBasedToListingDiscountPercent(storeCouponConfig.ratePercent),
     maxDiscount: storeCouponConfig.maxDiscount,
   }
 }
@@ -175,7 +176,10 @@ const cpfExtraFeeLabel = computed(() => formatCurrency(rulesConfig.cpfExtraFee))
 const cpfOrdersThresholdLabel = computed(() => rulesConfig.cpfExtraOrdersThreshold90d.toLocaleString('pt-BR'))
 const cnpjLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cnpjLowPriceThreshold))
 const cpfLowPriceThresholdLabel = computed(() => formatCurrency(rulesConfig.cpfLowPriceThreshold))
-const storeCouponRateLabel = computed(() => formatPercent(storeCouponConfig.ratePercent / 100))
+const finalBasedStoreCouponRateLabel = computed(() => formatPercent(normalizePercentInput(storeCouponConfig.ratePercent)))
+const effectiveStoreCouponRateLabel = computed(() =>
+  formatPercent(finalBasedToListingDiscountPercent(storeCouponConfig.ratePercent)),
+)
 
 function sellerLabel(value: SellerType): string {
   return value === 'cnpj' ? 'CNPJ' : 'CPF'
@@ -222,8 +226,8 @@ function resetRulesConfig(): void {
         </a>
       </p>
       <p class="hero-links">
-        <router-link class="primary-link" to="/calcular-valor-produto">Página unitária</router-link>
-        <router-link class="primary-link" to="/calcular-varios-produtos">Página para vários produtos</router-link>
+        <router-link class="primary-link" to="/calcular-valor-produto">Calcular preço de 1 produto</router-link>
+        <router-link class="primary-link" to="/calcular-varios-produtos">Calcular preço de vários produtos (tabela)</router-link>
       </p>
     </section>
 
@@ -272,7 +276,7 @@ function resetRulesConfig(): void {
 
         <div v-if="caseOneForm.includeStoreCoupon" class="form-grid">
           <label>
-            Cupom (%)
+            Cupom (% sobre preço final)
             <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
           </label>
           <label>
@@ -314,7 +318,12 @@ function resetRulesConfig(): void {
         <ul class="explain-list">
           <li>{{ sellerLabel(caseOneForm.sellerType) }} • {{ paymentLabel(caseOneForm.paymentMethod) }}</li>
           <li>
-            Cupom loja: {{ caseOneForm.includeStoreCoupon ? `ativo (${storeCouponRateLabel})` : 'desativado' }}
+            Cupom loja:
+            {{
+              caseOneForm.includeStoreCoupon
+                ? `ativo (${finalBasedStoreCouponRateLabel} sobre final, equivalente ${effectiveStoreCouponRateLabel})`
+                : 'desativado'
+            }}
           </li>
           <li>Subsídio Pix aplicado: {{ formatCurrency(caseOneCommissionBreakdown.pixSubsidyAmount) }}</li>
           <li>Comissão base: {{ formatCurrency(caseOneCommissionBreakdown.baseCommissionAmount) }}</li>
@@ -366,7 +375,7 @@ function resetRulesConfig(): void {
 
         <div v-if="caseTwoForm.includeStoreCoupon" class="form-grid">
           <label>
-            Cupom (%)
+            Cupom (% sobre preço final)
             <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
           </label>
           <label>
@@ -412,7 +421,12 @@ function resetRulesConfig(): void {
         <ul class="explain-list">
           <li>Alvo informado: {{ formatCurrency(caseTwoForm.targetNetAmount) }}</li>
           <li>
-            Cupom loja: {{ caseTwoForm.includeStoreCoupon ? `ativo (${storeCouponRateLabel})` : 'desativado' }}
+            Cupom loja:
+            {{
+              caseTwoForm.includeStoreCoupon
+                ? `ativo (${finalBasedStoreCouponRateLabel} sobre final, equivalente ${effectiveStoreCouponRateLabel})`
+                : 'desativado'
+            }}
           </li>
           <li>Subsídio Pix aplicado: {{ formatCurrency(caseTwoCommissionBreakdown.pixSubsidyAmount) }}</li>
           <li>Status do cálculo: {{ caseTwoResult.status }}</li>
