@@ -169,6 +169,7 @@ p {
 
 .table-first {
   order: -1;
+  min-width: 0;
 }
 
 .product-value-card {
@@ -305,6 +306,24 @@ select {
   overflow-x: auto;
   border: 1px solid #d8dfce;
   border-radius: 12px;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.table-scroll-shell {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.table-scroll-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #4f655d;
+  font-weight: 600;
 }
 
 .pricing-table {
@@ -335,6 +354,22 @@ select {
 
 .pricing-table td input {
   min-width: 120px;
+}
+
+.pricing-table th:first-child,
+.pricing-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.pricing-table th:first-child {
+  z-index: 3;
+  background: #f6faef;
+}
+
+.pricing-table td:first-child {
+  background: #fff;
 }
 
 .status-pill {
@@ -465,5 +500,36 @@ select {
   .table-actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .table-scroll-hint {
+    display: block;
+  }
+
+  .table-scroll-shell::before,
+  .table-scroll-shell::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 18px;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .table-scroll-shell::before {
+    left: 1px;
+    background: linear-gradient(90deg, rgba(251, 253, 247, 0.98), rgba(251, 253, 247, 0));
+  }
+
+  .table-scroll-shell::after {
+    right: 1px;
+    background: linear-gradient(270deg, rgba(251, 253, 247, 0.98), rgba(251, 253, 247, 0));
+  }
+}
+
+@media (min-width: 981px) {
+  .table-scroll-hint {
+    display: none;
   }
 }
