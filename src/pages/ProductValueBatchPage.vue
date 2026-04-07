@@ -265,50 +265,53 @@ function removeRow(id: number): void {
         </p>
         <p class="card-subtitle">Os descontos são aplicados diretamente sobre o preço de cadastro.</p>
 
-        <div class="table-wrap">
-          <table class="pricing-table">
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th>Custo</th>
-                <th>Lucro líquido</th>
-                <th>Preço cadastro</th>
-                <th>Preço comprador</th>
-                <th>Cupom</th>
-                <th>Comissão</th>
-                <th>Líquido</th>
-                <th>Diferença</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody v-if="rowResults.length > 0">
-              <tr v-for="item in rowResults" :key="item.row.id">
-                <td>
-                  <input v-model="item.row.name" type="text" />
-                </td>
-                <td>
-                  <input v-model.number="item.row.productCost" type="number" min="0" step="0.01" />
-                </td>
-                <td>
-                  <input v-model.number="item.row.targetProfit" type="number" min="0" step="0.01" />
-                </td>
-                <td>{{ formatCurrency(item.result.requiredFullPrice) }}</td>
-                <td>{{ formatCurrency(item.result.finalBuyerPrice) }}</td>
-                <td>{{ formatCurrency(item.result.couponDiscountAmount) }}</td>
-                <td>{{ formatCurrency(item.result.commissionAmount) }}</td>
-                <td>{{ formatCurrency(item.result.netAmount) }}</td>
-                <td>{{ formatCurrency(item.result.netDiffToTarget) }}</td>
-                <td>
-                  <span class="status-pill">{{ item.result.status }}</span>
-                </td>
-                <td>
-                  <button type="button" class="danger-btn" @click="removeRow(item.row.id)">Remover</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p v-if="rowResults.length === 0" class="empty-table">Nenhum produto na tabela. Clique em "Adicionar produto".</p>
+        <p class="table-scroll-hint">Arraste a tabela para o lado para ver todas as colunas.</p>
+        <div class="table-scroll-shell">
+          <div class="table-wrap">
+            <table class="pricing-table">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Custo</th>
+                  <th>Lucro líquido</th>
+                  <th>Preço cadastro</th>
+                  <th>Preço comprador</th>
+                  <th>Cupom</th>
+                  <th>Comissão</th>
+                  <th>Líquido</th>
+                  <th>Diferença</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody v-if="rowResults.length > 0">
+                <tr v-for="item in rowResults" :key="item.row.id">
+                  <td>
+                    <input v-model="item.row.name" type="text" />
+                  </td>
+                  <td>
+                    <input v-model.number="item.row.productCost" type="number" min="0" step="0.01" />
+                  </td>
+                  <td>
+                    <input v-model.number="item.row.targetProfit" type="number" min="0" step="0.01" />
+                  </td>
+                  <td>{{ formatCurrency(item.result.requiredFullPrice) }}</td>
+                  <td>{{ formatCurrency(item.result.finalBuyerPrice) }}</td>
+                  <td>{{ formatCurrency(item.result.couponDiscountAmount) }}</td>
+                  <td>{{ formatCurrency(item.result.commissionAmount) }}</td>
+                  <td>{{ formatCurrency(item.result.netAmount) }}</td>
+                  <td>{{ formatCurrency(item.result.netDiffToTarget) }}</td>
+                  <td>
+                    <span class="status-pill">{{ item.result.status }}</span>
+                  </td>
+                  <td>
+                    <button type="button" class="danger-btn" @click="removeRow(item.row.id)">Remover</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p v-if="rowResults.length === 0" class="empty-table">Nenhum produto na tabela. Clique em "Adicionar produto".</p>
+          </div>
         </div>
 
       </article>
