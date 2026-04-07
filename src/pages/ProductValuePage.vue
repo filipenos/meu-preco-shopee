@@ -5,6 +5,7 @@ import type { PaymentMethod, SellerType } from '../domain/types'
 import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getProductValueRuleVisibility } from './product-value-rule-visibility'
+import { calculateNetFromFullPrice } from '../services/net-from-full-price-service'
 import { calculateProductValueFromCostAndTargetProfit } from '../services/product-value-from-cost-and-target-profit-service'
 
 const rulesConfig = reactive({
@@ -16,8 +17,10 @@ const rulesConfig = reactive({
 })
 
 const form = reactive({
+  objectiveMode: 'cost_and_net' as 'cost_and_net' | 'listing_price',
   productCost: 202,
   targetNetAmount: 202,
+  listingPrice: 500,
   productCouponPercent: 0,
   sellerType: 'cnpj' as SellerType,
   paymentMethod: 'card_or_boleto' as PaymentMethod,
@@ -52,7 +55,7 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
   }
 }
 
-const result = computed(() => {
+const resultFromCostAndNet = computed(() => {
   const [calculated] = calculateProductValueFromCostAndTargetProfit({
     context: {
       sellerType: form.sellerType,
@@ -75,6 +78,57 @@ const result = computed(() => {
   return calculated
 })
 
+const resultFromListingPrice = computed(() => {
+  const [calculated] = calculateNetFromFullPrice({
+    context: {
+      sellerType: form.sellerType,
+      paymentMethod: form.paymentMethod,
+      ordersLast90Days: form.ordersLast90Days,
+      includeCampaignExtra: form.includeCampaignExtra,
+      storeCoupon: buildStoreCoupon(form.includeStoreCoupon),
+    },
+    items: [
+      {
+        variationName: 'item',
+        fullPrice: form.listingPrice,
+        discountPercent: normalizePercentInput(form.productCouponPercent),
+      },
+    ],
+    rulesConfig: serviceRulesConfig.value,
+  })
+
+  return calculated
+})
+
+const result = computed(() => {
+  if (form.objectiveMode === 'cost_and_net') {
+    return resultFromCostAndNet.value
+  }
+
+  const listingResult = resultFromListingPrice.value
+  const productCost = Number.isFinite(form.productCost) && form.productCost > 0 ? form.productCost : 0
+
+  return {
+    variationName: listingResult.variationName,
+    productCost,
+    targetProfit: 0,
+    targetNetAmount: listingResult.netAmount,
+    productCouponPercent: listingResult.discountPercent,
+    requiredFullPrice: listingResult.fullPrice,
+    discountedPrice: listingResult.discountedPrice,
+    couponApplied: listingResult.couponApplied,
+    couponDiscountAmount: listingResult.couponDiscountAmount,
+    finalBuyerPrice: listingResult.finalBuyerPrice,
+    commissionAmount: listingResult.commissionAmount,
+    pixSubsidyAmount: 0,
+    netAmount: listingResult.netAmount,
+    netDiffToTarget: 0,
+    profitAfterCost: listingResult.netAmount - productCost,
+    profitDiffToTarget: 0,
+    status: 'ok' as const,
+  }
+})
+
 const campaignRateLabel = computed(() => formatPercent(rulesConfig.campaignExtraRatePercent / 100))
 const cpfExtraFeeLabel = computed(() => formatCurrency(rulesConfig.cpfExtraFee))
 const cpfOrdersThresholdLabel = computed(() => rulesConfig.cpfExtraOrdersThreshold90d.toLocaleString('pt-BR'))
@@ -84,6 +138,14 @@ const storeCouponPercent = computed(() => normalizePercentInput(storeCouponConfi
 const showCouponFields = computed(() => form.includeStoreCoupon)
 const visibleRules = computed(() => getProductValueRuleVisibility(form.sellerType))
 const productCouponPercent = computed(() => normalizePercentInput(form.productCouponPercent))
+const isCostAndNetMode = computed(() => form.objectiveMode === 'cost_and_net')
+const primaryResultLabel = computed(() => (isCostAndNetMode.value ? 'Preço de cadastro (Shopee)' : 'Líquido total previsto'))
+const primaryResultValue = computed(() => (isCostAndNetMode.value ? result.value.requiredFullPrice : result.value.netAmount))
+const primaryResultHint = computed(() =>
+  isCostAndNetMode.value
+    ? 'Use este valor no campo de preço do anúncio.'
+    : 'Total líquido estimado que cai após taxas e descontos.',
+)
 
 function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): string {
   if (itemPrice <= 0) {
@@ -121,21 +183,32 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
         <section class="input-block">
           <div class="input-block-header">
             <h3>1. Objetivo</h3>
-            <p>Custo e lucro líquido real desejado (valor no bolso).</p>
+            <p>Escolha entre calcular o preço de cadastro ou calcular o líquido a partir do preço de cadastro.</p>
           </div>
           <div class="form-grid">
+            <label>
+              Objetivo do cálculo
+              <select v-model="form.objectiveMode">
+                <option value="cost_and_net">Descobrir preço pelo custo + líquido</option>
+                <option value="listing_price">Descobrir líquido pelo preço de cadastro</option>
+              </select>
+            </label>
             <label>
               Custo do produto
               <input v-model.number="form.productCost" type="number" min="0" step="0.01" />
             </label>
-            <label>
+            <label v-if="isCostAndNetMode">
               Lucro líquido desejado (valor real no bolso)
               <input v-model.number="form.targetNetAmount" type="number" min="0" step="0.01" />
             </label>
+            <label v-else>
+              Valor de cadastro (Shopee)
+              <input v-model.number="form.listingPrice" type="number" min="0" step="0.01" />
+            </label>
           </div>
           <div class="result-highlight">
-            <span>Alvo total (custo + lucro)</span>
-            <strong>{{ formatCurrency(result.targetNetAmount) }}</strong>
+            <span>{{ isCostAndNetMode ? 'Alvo total (custo + lucro)' : 'Líquido total estimado' }}</span>
+            <strong>{{ formatCurrency(isCostAndNetMode ? result.targetNetAmount : result.netAmount) }}</strong>
           </div>
         </section>
 
@@ -248,17 +321,17 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
         <section class="input-block result-block">
           <div class="input-block-header">
             <h3>5. Resultado</h3>
-            <p>Preço final que deve ser cadastrado no produto da Shopee.</p>
+            <p>{{ isCostAndNetMode ? 'Preço final que deve ser cadastrado no produto da Shopee.' : 'Resultado para o preço de cadastro informado.' }}</p>
           </div>
           <div class="result-grid">
             <div class="result-primary">
-              <span>Preço de cadastro (Shopee)</span>
-              <strong>{{ formatCurrency(result.requiredFullPrice) }}</strong>
-              <em class="metric-note">Use este valor no campo de preço do anúncio.</em>
+              <span>{{ primaryResultLabel }}</span>
+              <strong>{{ formatCurrency(primaryResultValue) }}</strong>
+              <em class="metric-note">{{ primaryResultHint }}</em>
             </div>
             <div>
-              <span>Preço final comprador</span>
-              <strong>{{ formatCurrency(result.finalBuyerPrice) }}</strong>
+              <span>{{ isCostAndNetMode ? 'Preço final comprador' : 'Preço de cadastro (Shopee)' }}</span>
+              <strong>{{ formatCurrency(isCostAndNetMode ? result.finalBuyerPrice : result.requiredFullPrice) }}</strong>
             </div>
             <div>
               <span>Comissão total</span>
@@ -287,8 +360,9 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
           <ul class="explain-list">
             <li>Preço para cadastrar: {{ formatCurrency(result.requiredFullPrice) }}</li>
             <li>Custo do produto: {{ formatCurrency(form.productCost) }}</li>
-            <li>Lucro líquido desejado (no bolso): {{ formatCurrency(form.targetNetAmount) }}</li>
-            <li>Alvo total (custo + lucro): {{ formatCurrency(result.targetNetAmount) }}</li>
+            <li v-if="isCostAndNetMode">Lucro líquido desejado (no bolso): {{ formatCurrency(form.targetNetAmount) }}</li>
+            <li v-if="isCostAndNetMode">Alvo total (custo + lucro): {{ formatCurrency(result.targetNetAmount) }}</li>
+            <li v-else>Líquido total estimado: {{ formatCurrency(result.netAmount) }}</li>
             <li>Cupom do produto: {{ formatPercent(productCouponPercent) }}</li>
             <li>
               Cupom loja:
