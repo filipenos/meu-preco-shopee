@@ -7,7 +7,6 @@ import type { CommissionRules, PaymentMethod, SellerType } from '../domain/types
 import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getCommissionFromItemPrice } from '../use-cases/get-commission-from-item-price'
-import { calculateFullPriceFromTargetNet } from '../services/full-price-from-target-net-service'
 import { calculateNetFromFullPrice } from '../services/net-from-full-price-service'
 
 inject()
@@ -37,27 +36,23 @@ const caseOneForm = reactive({
   includeStoreCoupon: false,
 })
 
-const caseTwoForm = reactive({
-  targetNetAmount: 404,
-  sellerType: 'cnpj' as SellerType,
-  paymentMethod: 'card_or_boleto' as PaymentMethod,
-  ordersLast90Days: 0,
-  includeCampaignExtra: false,
-  includeStoreCoupon: false,
-})
-
 const storeCouponConfig = reactive({
   minPrice: 30,
   ratePercent: 3,
   maxDiscount: 3,
 })
 
+function formatBracketRange(min: number, max: number | null): string {
+  return max === null
+    ? `Acima de ${formatCurrency(min)}`
+    : `${formatCurrency(min)} até ${formatCurrency(max)}`
+}
+
 const cnpjRuleCards = computed(() => {
   return activeRules.value.brackets.map((bracket) => ({
-    rangeLabel:
-      bracket.max === null
-        ? `Acima de ${formatCurrency(bracket.min)}`
-        : `${formatCurrency(bracket.min)} até ${formatCurrency(bracket.max)}`,
+    min: bracket.min,
+    max: bracket.max,
+    rangeLabel: formatBracketRange(bracket.min, bracket.max),
     commissionLabel: `${formatPercent(bracket.percentageRate)} + ${formatCurrency(bracket.fixedFee)}`,
     pixLabel: bracket.pixSubsidyRate === 0 ? '-' : formatPercent(bracket.pixSubsidyRate),
   }))
@@ -65,10 +60,9 @@ const cnpjRuleCards = computed(() => {
 
 const cpfRuleCards = computed(() => {
   return activeRules.value.brackets.map((bracket) => ({
-    rangeLabel:
-      bracket.max === null
-        ? `Acima de ${formatCurrency(bracket.min)}`
-        : `${formatCurrency(bracket.min)} até ${formatCurrency(bracket.max)}`,
+    min: bracket.min,
+    max: bracket.max,
+    rangeLabel: formatBracketRange(bracket.min, bracket.max),
     commissionLabel: `${formatPercent(bracket.percentageRate)} + ${formatCurrency(bracket.fixedFee)} + ${cpfExtraFeeLabel.value}`,
     pixLabel: bracket.pixSubsidyRate === 0 ? '-' : formatPercent(bracket.pixSubsidyRate),
   }))
@@ -136,40 +130,12 @@ const caseOneCommissionBreakdown = computed(() =>
   }),
 )
 
-const caseTwoResult = computed(() => {
-  const [result] = calculateFullPriceFromTargetNet({
-    context: {
-      sellerType: caseTwoForm.sellerType,
-      paymentMethod: caseTwoForm.paymentMethod,
-      ordersLast90Days: caseTwoForm.ordersLast90Days,
-      includeCampaignExtra: caseTwoForm.includeCampaignExtra,
-      storeCoupon: buildStoreCoupon(caseTwoForm.includeStoreCoupon),
-    },
-    items: [
-      {
-        variationName: 'item',
-        discountPercent: 0,
-        targetNet: caseTwoForm.targetNetAmount,
-      },
-    ],
-    rulesConfig: serviceRulesConfig.value,
-  })
+const appliedBracketLabel = computed(() => {
+  const price = caseOneResult.value.finalBuyerPrice
+  const bracket = activeRules.value.brackets.find((item) => isPriceInBracket(price, item.min, item.max))
 
-  return result
+  return bracket ? formatBracketRange(bracket.min, bracket.max) : 'Não identificada'
 })
-
-const caseTwoCommissionBreakdown = computed(() =>
-  getCommissionFromItemPrice({
-    itemPrice: caseTwoResult.value.finalBuyerPrice,
-    sellerType: caseTwoForm.sellerType,
-    paymentMethod: caseTwoForm.paymentMethod,
-    ordersLast90Days: caseTwoForm.ordersLast90Days,
-    includeCampaignExtra: caseTwoForm.includeCampaignExtra,
-    rules: activeRules.value,
-  }),
-)
-
-const caseTwoNetDiff = computed(() => caseTwoResult.value.netAmount - caseTwoForm.targetNetAmount)
 
 const campaignRateLabel = computed(() => formatPercent(rulesConfig.campaignExtraRatePercent / 100))
 const cpfExtraFeeLabel = computed(() => formatCurrency(rulesConfig.cpfExtraFee))
@@ -192,6 +158,14 @@ function effectiveRateLabel(totalCommissionAmount: number, itemPrice: number): s
   }
 
   return formatPercent(totalCommissionAmount / itemPrice)
+}
+
+function isPriceInBracket(price: number, min: number, max: number | null): boolean {
+  if (price < min) {
+    return false
+  }
+
+  return max === null ? true : price <= max
 }
 
 function resetRulesConfig(): void {
@@ -222,13 +196,9 @@ function resetRulesConfig(): void {
           Confira como funcionará a nova política de comissão para vendedores CNPJ e CPF em 2026
         </a>
       </p>
-      <p class="hero-links">
-        <router-link class="primary-link" to="/calcular-valor-produto">Calcular preço de 1 produto</router-link>
-        <router-link class="primary-link" to="/calcular-varios-produtos">Calcular preço de vários produtos (tabela)</router-link>
-      </p>
     </section>
 
-    <section class="grid-two">
+    <section class="grid-two grid-main">
       <article class="card">
         <h2>Calcular taxa de comissão Shopee</h2>
         <p class="card-subtitle">Recebe preço e configurações, com cupom loja opcional antes da comissão.</p>
@@ -314,6 +284,7 @@ function resetRulesConfig(): void {
 
         <ul class="explain-list">
           <li>{{ sellerLabel(caseOneForm.sellerType) }} • {{ paymentLabel(caseOneForm.paymentMethod) }}</li>
+          <li>Faixa aplicada: {{ appliedBracketLabel }}</li>
           <li>
             Cupom loja:
             {{
@@ -329,105 +300,42 @@ function resetRulesConfig(): void {
       </article>
 
       <article class="card">
-        <h2>Calcular quanto quero receber</h2>
-        <p class="card-subtitle">Recebe líquido desejado e configurações, com cupom loja opcional.</p>
+        <h2>Tabela base de faixas</h2>
+        <p class="card-subtitle">Mostra as faixas conforme o tipo de vendedor selecionado no cálculo.</p>
 
-        <div class="form-grid">
-          <label>
-            Valor líquido desejado
-            <input v-model.number="caseTwoForm.targetNetAmount" type="number" min="0" step="0.01" />
-          </label>
-
-          <label>
-            Tipo de vendedor
-            <select v-model="caseTwoForm.sellerType">
-              <option value="cnpj">CNPJ</option>
-              <option value="cpf">CPF</option>
-            </select>
-          </label>
-
-          <label>
-            Meio de pagamento
-            <select v-model="caseTwoForm.paymentMethod">
-              <option value="card_or_boleto">Cartão/Boleto</option>
-              <option value="pix">Pix</option>
-            </select>
-          </label>
-
-          <label v-if="caseTwoForm.sellerType === 'cpf'">
-            Pedidos em 90 dias
-            <input v-model.number="caseTwoForm.ordersLast90Days" type="number" min="0" step="1" />
-          </label>
-        </div>
-
-        <label class="inline-check">
-          <input v-model="caseTwoForm.includeCampaignExtra" type="checkbox" />
-          Aplicar Campanha de Destaque Shopee ({{ campaignRateLabel }})
-        </label>
-
-        <label class="inline-check">
-          <input v-model="caseTwoForm.includeStoreCoupon" type="checkbox" />
-          Aplicar cupom da loja
-        </label>
-
-        <div v-if="caseTwoForm.includeStoreCoupon" class="form-grid">
-          <label>
-            Cupom (%)
-            <input v-model.number="storeCouponConfig.ratePercent" type="number" min="0" max="100" step="0.01" />
-          </label>
-          <label>
-            Mínimo para cupom (R$)
-            <input v-model.number="storeCouponConfig.minPrice" type="number" min="0" step="0.01" />
-          </label>
-          <label>
-            Teto desconto cupom (R$)
-            <input v-model.number="storeCouponConfig.maxDiscount" type="number" min="0" step="0.01" />
-          </label>
-        </div>
-
-        <div class="result-grid">
-          <div>
-            <span>Preço sugerido</span>
-            <strong>{{ formatCurrency(caseTwoResult.requiredFullPrice) }}</strong>
-          </div>
-          <div>
-            <span>Desconto cupom</span>
-            <strong>{{ formatCurrency(caseTwoResult.couponDiscountAmount) }}</strong>
-          </div>
-          <div>
-            <span>Preço final comprador</span>
-            <strong>{{ formatCurrency(caseTwoResult.finalBuyerPrice) }}</strong>
-          </div>
-          <div>
-            <span>Comissão total</span>
-            <strong>{{ formatCurrency(caseTwoResult.commissionAmount) }}</strong>
-            <em class="metric-note">
-              Efetivo: {{ effectiveRateLabel(caseTwoResult.commissionAmount, caseTwoResult.finalBuyerPrice) }}
-            </em>
-          </div>
-          <div>
-            <span>Líquido alcançado</span>
-            <strong>{{ formatCurrency(caseTwoResult.netAmount) }}</strong>
-          </div>
-          <div>
-            <span>Diferença para alvo</span>
-            <strong>{{ formatCurrency(caseTwoNetDiff) }}</strong>
+        <div v-if="caseOneForm.sellerType === 'cnpj'" class="rates-section">
+          <h3>Faixas CNPJ</h3>
+          <div class="rates-stack">
+            <div
+              v-for="item in cnpjRuleCards"
+              :key="`cnpj-${item.rangeLabel}`"
+              :class="['rate-item', 'large', { 'rate-item-active': isPriceInBracket(caseOneResult.finalBuyerPrice, item.min, item.max) }]"
+            >
+              <h4>{{ item.rangeLabel }}</h4>
+              <p>Comissão: {{ item.commissionLabel }}</p>
+              <p>Subsídio Pix: {{ item.pixLabel }}</p>
+            </div>
           </div>
         </div>
 
-        <ul class="explain-list">
-          <li>Alvo informado: {{ formatCurrency(caseTwoForm.targetNetAmount) }}</li>
-          <li>
-            Cupom loja:
-            {{
-              caseTwoForm.includeStoreCoupon
-                ? `ativo (${storeCouponRateLabel})`
-                : 'desativado'
-            }}
-          </li>
-          <li>Subsídio Pix aplicado: {{ formatCurrency(caseTwoCommissionBreakdown.pixSubsidyAmount) }}</li>
-          <li>Status do cálculo: {{ caseTwoResult.status }}</li>
-        </ul>
+        <div v-else class="rates-section">
+          <h3>Faixas CPF</h3>
+          <p class="rates-note">
+            Tabela com adicional CPF de {{ cpfExtraFeeLabel }}. Esse adicional entra quando passar de
+            {{ cpfOrdersThresholdLabel }} pedidos em 90 dias.
+          </p>
+          <div class="rates-stack">
+            <div
+              v-for="item in cpfRuleCards"
+              :key="`cpf-${item.rangeLabel}`"
+              :class="['rate-item', 'large', { 'rate-item-active': isPriceInBracket(caseOneResult.finalBuyerPrice, item.min, item.max) }]"
+            >
+              <h4>{{ item.rangeLabel }}</h4>
+              <p>Comissão: {{ item.commissionLabel }}</p>
+              <p>Subsídio Pix: {{ item.pixLabel }}</p>
+            </div>
+          </div>
+        </div>
       </article>
     </section>
 
@@ -490,34 +398,8 @@ function resetRulesConfig(): void {
     </section>
 
     <section class="card full">
-      <h2>Tabela base de faixas</h2>
-      <p class="card-subtitle">Referência oficial da política de comissão de 01/03/2026, separada por tipo de vendedor.</p>
-
-      <div class="rates-section">
-        <h3>Vendedores CNPJ</h3>
-        <div class="rates-grid">
-          <div v-for="item in cnpjRuleCards" :key="`cnpj-${item.rangeLabel}`" class="rate-item large">
-            <h4>{{ item.rangeLabel }}</h4>
-            <p>Comissão: {{ item.commissionLabel }}</p>
-            <p>Subsídio Pix: {{ item.pixLabel }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="rates-section">
-        <h3>Vendedores CPF</h3>
-        <p class="rates-note">
-          Tabela com adicional CPF de {{ cpfExtraFeeLabel }}. Esse adicional entra quando passar de
-          {{ cpfOrdersThresholdLabel }} pedidos em 90 dias.
-        </p>
-        <div class="rates-grid">
-          <div v-for="item in cpfRuleCards" :key="`cpf-${item.rangeLabel}`" class="rate-item large">
-            <h4>{{ item.rangeLabel }}</h4>
-            <p>Comissão: {{ item.commissionLabel }}</p>
-            <p>Subsídio Pix: {{ item.pixLabel }}</p>
-          </div>
-        </div>
-      </div>
+      <h2>Regras e observações</h2>
+      <p class="card-subtitle">Resumo operacional da política vigente em 01/03/2026.</p>
 
       <div class="notice-grid">
         <article>
