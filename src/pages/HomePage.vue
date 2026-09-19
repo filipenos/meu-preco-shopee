@@ -9,6 +9,7 @@ import type { CommissionRules, PaymentMethod, SellerType } from '../domain/types
 import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getCommissionFromItemPrice } from '../use-cases/get-commission-from-item-price'
+import { calculateTargetSalePrice } from '../services/target-sale-price-service'
 import { compareLowerPrices } from '../services/lower-price-service'
 import { calculateFullPriceFromTargetNet } from '../services/full-price-from-target-net-service'
 
@@ -33,8 +34,9 @@ const defaultRulesConfig = {
   cpfLowPriceThreshold: 12,
 }
 
-const calculationMode = ref<'price' | 'target'>('price')
+const calculationMode = ref<'price' | 'target' | 'sale'>('price')
 const targetNet = ref(70)
+const saleForm = reactive({ targetPrice: 14.9, discountPercent: 20, couponTreatment: 'compensate' as 'compensate' | 'absorb' })
 
 const caseOneForm = reactive({
   itemPrice: 500,
@@ -115,10 +117,18 @@ const { result: calculation, error: calculationError } = useCalculation(() => {
     includeCampaignExtra: caseOneForm.includeCampaignExtra,
     storeCoupon: buildStoreCoupon(caseOneForm.includeStoreCoupon),
   }
+  if (calculationMode.value === 'sale') {
+    return calculateTargetSalePrice({
+      targetPrice: saleForm.targetPrice,
+      discountPercent: normalizePercentInput(saleForm.discountPercent),
+      couponTreatment: saleForm.couponTreatment, context, rulesConfig: serviceRulesConfig.value,
+    })
+  }
   if (calculationMode.value === 'target') {
     const [result] = calculateFullPriceFromTargetNet({
       context,
-      items: [{ variationName: 'item', discountPercent: 0, targetNet: targetNet.value }],
+      items: [{ variationName: 'item', discountPercent: normalizePercentInput(saleForm.discountPercent), targetNet: targetNet.value }],
+      couponTreatment: saleForm.couponTreatment,
       rulesConfig: serviceRulesConfig.value,
     })
     if (result.status === 'target-too-low') throw new Error('Informe um valor líquido maior que zero.')
@@ -218,17 +228,15 @@ function resetRulesConfig(): void {
 
     <section class="grid-two grid-main">
       <article class="card">
-        <h2>{{ calculationMode === 'target' ? 'Calcular preço de cadastro' : 'Calcular quanto vou receber' }}</h2>
-        <label>
-          O que você quer calcular?
-          <select v-model="calculationMode">
-            <option value="price">Tenho um preço</option>
-            <option value="target">Quero receber um valor</option>
-          </select>
-        </label>
+        <h2>{{ calculationMode !== 'price' ? 'Calcular preço de cadastro' : 'Calcular quanto vou receber' }}</h2>
+        <div class="mode-tabs" role="group" aria-label="Modo de cálculo">
+          <button type="button" :aria-pressed="calculationMode === 'price'" @click="calculationMode = 'price'">Tenho um preço</button>
+          <button type="button" :aria-pressed="calculationMode === 'target'" @click="calculationMode = 'target'">Quero receber líquido</button>
+          <button type="button" :aria-pressed="calculationMode === 'sale'" @click="calculationMode = 'sale'">Quero vender por um valor</button>
+        </div>
         <p class="card-subtitle">
-          {{ calculationMode === 'target'
-            ? 'Encontre o menor preço de cadastro para receber o líquido desejado, considerando taxas e cupom.'
+          {{ calculationMode === 'sale' ? 'Calcule o preço de cadastro para vender pelo valor desejado com promoção e cupom.'
+            : calculationMode === 'target' ? 'Encontre o menor preço de cadastro para receber o líquido desejado.'
             : 'Informe o preço para calcular taxas e quanto você recebe.' }}
         </p>
 
@@ -237,6 +245,10 @@ function resetRulesConfig(): void {
             Quanto quero receber líquido (R$)
             <input v-model.number="targetNet" type="number" min="0.01" max="100000000" step="0.01" />
             <small>Por item, após os descontos da Shopee e antes do custo do produto.</small>
+          </label>
+          <label v-else-if="calculationMode === 'sale'">
+            Quero vender por (R$)
+            <input v-model.number="saleForm.targetPrice" type="number" min="0.01" max="100000000" step="0.01" />
           </label>
           <label v-else>
             Valor do produto
@@ -262,6 +274,24 @@ function resetRulesConfig(): void {
           <label v-if="caseOneForm.sellerType === 'cpf'">
             Pedidos em 90 dias
             <input v-model.number="caseOneForm.ordersLast90Days" type="number" min="0" step="1" />
+          </label>
+        </div>
+
+        <div v-if="calculationMode !== 'price'" class="form-grid">
+          <label>
+            Desconto da promoção (%)
+            <input v-model.number="saleForm.discountPercent" type="number" min="0" max="100" step="0.01" />
+            <small>Aplicado ao preço de cadastro antes do cupom da loja.</small>
+          </label>
+          <label v-if="caseOneForm.includeStoreCoupon">
+            Como tratar o cupom?
+            <select v-model="saleForm.couponTreatment">
+              <option value="compensate">Compensar no preço de cadastro</option>
+              <option value="absorb">Absorver o cupom</option>
+            </select>
+            <small>{{ calculationMode === 'target'
+              ? (saleForm.couponTreatment === 'compensate' ? 'A meta de líquido considera o cupom aplicado.' : 'A meta é calculada antes do cupom. O líquido final pode ficar abaixo dela.')
+              : (saleForm.couponTreatment === 'compensate' ? 'O preço desejado é o que o comprador paga após o cupom.' : 'O cupom reduz o preço desejado e o seu líquido.') }}</small>
           </label>
         </div>
 
@@ -293,17 +323,33 @@ function resetRulesConfig(): void {
         <section v-if="calculationMode === 'target' && calculation && caseOneResult" class="price-suggestion" aria-labelledby="target-result-title">
           <h3 id="target-result-title">Preço para cadastrar: {{ formatCurrency(calculation.fullPrice) }}</h3>
           <p>
-            Para receber {{ formatCurrency(targetNet) }}, cadastre por
+            Para a meta de {{ formatCurrency(targetNet) }}{{ caseOneForm.includeStoreCoupon && saleForm.couponTreatment === 'absorb' ? ' antes do cupom' : ' líquidos' }}, cadastre por
             <strong>{{ formatCurrency(calculation.fullPrice) }}</strong>.
             Líquido estimado: <strong>{{ formatCurrency(caseOneResult.netAmount) }}</strong> por item.
           </p>
-          <p class="metric-note">Menor preço que atinge sua meta, considerando os centavos e as mudanças de faixa.</p>
+          <p class="metric-note">Menor preço que atinge sua meta {{ caseOneForm.includeStoreCoupon && saleForm.couponTreatment === 'absorb' ? 'antes do cupom' : 'após os descontos' }}, considerando os centavos e as mudanças de faixa.</p>
+          <p v-if="caseOneForm.includeStoreCoupon && saleForm.couponTreatment === 'absorb'">Você absorve o cupom. O líquido após sua aplicação é {{ formatCurrency(caseOneResult.netAmount) }}, com as taxas recalculadas.</p>
+        </section>
+
+        <section v-if="calculationMode === 'sale' && calculation && caseOneResult" class="price-suggestion">
+          <h3>Preço para cadastrar: {{ formatCurrency(calculation.fullPrice) }}</h3>
+          <p>Após a promoção: {{ formatCurrency(caseOneResult.discountedPrice) }}. Após o cupom: <strong>{{ formatCurrency(caseOneResult.finalBuyerPrice) }}</strong>.</p>
+          <p v-if="'exact' in calculation && !calculation.exact">A meta exata não é representável com esses descontos. Mostramos o menor preço que atinge ou supera a meta.</p>
+          <p v-if="caseOneForm.includeStoreCoupon && !caseOneResult.couponApplied">O cupom não gerou desconto neste preço; confira o mínimo e o teto configurados.</p>
         </section>
 
         <div v-if="caseOneResult && caseOneCommissionBreakdown" class="result-grid">
           <div>
             <span>Preço de cadastro</span>
             <strong>{{ formatCurrency(calculation!.fullPrice) }}</strong>
+          </div>
+          <div v-if="calculationMode !== 'price'">
+            <span>Desconto da promoção</span>
+            <strong>{{ formatCurrency(calculation!.fullPrice - caseOneResult.discountedPrice) }}</strong>
+          </div>
+          <div v-if="calculationMode !== 'price'">
+            <span>Preço após promoção</span>
+            <strong>{{ formatCurrency(caseOneResult.discountedPrice) }}</strong>
           </div>
           <div>
             <span>Desconto cupom</span>
@@ -341,8 +387,13 @@ function resetRulesConfig(): void {
             Comparação com as mesmas configurações, recalculando cupom, taxas e faixa.
             Valores estimados conforme as regras e ressalvas desta simulação.
           </p>
+          <p v-if="calculationMode === 'sale'">
+            Alternativa à sua meta: cadastro de {{ formatCurrency(lowerPriceSuggestion.suggestedPrice) }},
+            preço final de {{ formatCurrency(lowerPriceSuggestion.outcome.finalBuyerPrice) }}.
+            Sua meta permanece inalterada.
+          </p>
           <CalculationNotice :audit="lowerPriceSuggestion.outcome.audit" />
-          <button type="button" @click="caseOneForm.itemPrice = lowerPriceSuggestion.suggestedPrice">
+          <button v-if="calculationMode === 'price'" type="button" @click="caseOneForm.itemPrice = lowerPriceSuggestion.suggestedPrice">
             Usar preço de {{ formatCurrency(lowerPriceSuggestion.suggestedPrice) }}
           </button>
         </section>

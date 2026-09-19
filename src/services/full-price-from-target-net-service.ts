@@ -12,6 +12,7 @@ export interface FullPriceFromTargetNetItemInput {
 }
 
 export interface FullPriceFromTargetNetInput {
+  couponTreatment?: 'compensate' | 'absorb'
   context: FullPriceFromTargetNetContext
   items: FullPriceFromTargetNetItemInput[]
   rulesConfig?: CommissionServiceConfig
@@ -26,7 +27,11 @@ export interface FullPriceFromTargetNetItemResult extends PricingEvaluation {
 }
 
 export function calculateFullPriceFromTargetNet(input: FullPriceFromTargetNetInput): FullPriceFromTargetNetItemResult[] {
+  if (input.couponTreatment !== undefined && !['compensate', 'absorb'].includes(input.couponTreatment)) throw new Error('Tratamento do cupom inválido')
   const engine = createPricingEngine(input.context, input.rulesConfig)
+  const searchEngine = input.couponTreatment === 'absorb'
+    ? createPricingEngine({ ...input.context, storeCoupon: undefined }, input.rulesConfig)
+    : engine
   return input.items.map((item) => {
     const discountPercent = validateRate(item.discountPercent)
     assertFiniteNumber(item.targetNet, 'Líquido alvo', 0, 100_000_000)
@@ -36,7 +41,7 @@ export function calculateFullPriceFromTargetNet(input: FullPriceFromTargetNetInp
       variationName: item.variationName, discountPercent, targetNet,
       requiredFullPrice: 0, ...zero, status: 'target-too-low' as const,
     }
-    const cents = engine.findPrice(discountPercent, toCents(targetNet))
+    const cents = searchEngine.findPrice(discountPercent, toCents(targetNet))
     const price = cents ?? 10_000_000_000
     return {
       variationName: item.variationName, discountPercent, targetNet,

@@ -142,3 +142,34 @@ A página mostra a sugestão somente quando vantajosa e permite aplicar o preço
 com um botão. Os avisos de auditoria do resultado sugerido também são exibidos.
 A otimização segue as mesmas hipóteses documentadas do cálculo; não estima
 mudanças de demanda, frete para o comprador nem lucro após custo do produto.
+
+## Preço desejado de venda com promoção
+
+`calculateTargetSalePrice` recebe `targetPrice`, `discountPercent` (fração),
+`couponTreatment` (`compensate` ou `absorb`), contexto e regras.
+Procura o menor cadastro positivo que atinge a meta, aplicando primeiro a
+promoção e depois o cupom. Em `compensate`, a meta é o preço após cupom;
+em `absorb`, é o preço após promoção, antes do cupom.
+
+O mínimo e o teto do cupom continuam válidos. A busca separa o ponto de ativação
+do cupom, onde o preço final pode cair. O resultado `exact` informa se a meta foi
+atingida exatamente; quando não, a interface informa que encontrou o menor
+cadastro que atinge ou supera a meta. Metas impossíveis geram erro.
+
+Exemplo sintético: meta R$ 14,90, promoção 20%, cupom 3% com mínimo zero e teto
+R$ 3. Compensando: cadastro R$ 19,20, promoção R$ 15,36, final R$ 14,90.
+Absorvendo: cadastro R$ 18,62, promoção R$ 14,90, final R$ 14,45.
+O cadastro mínimo R$ 18,62 decorre do arredondamento do preço após promoção.
+
+As alternativas de preço menor preservam a promoção e o cupom, mostram o novo
+preço final e o ganho líquido e não alteram automaticamente a meta. As mesmas
+ressalvas de arredondamento e base de comissão do modelo continuam aplicáveis.
+
+Os campos de promoção e tratamento do cupom são compartilhados pelas abas
+“Quero receber líquido” e “Quero vender por um valor”. Na primeira,
+`calculateFullPriceFromTargetNet` aceita `couponTreatment` opcional (padrão:
+`compensate`). Compensar busca a meta de líquido já com o cupom. Absorver busca
+a meta sem cupom e depois recalcula o mesmo cadastro com cupom, inclusive taxas
+e faixa; portanto, o líquido final pode ficar abaixo da meta. A interface
+explicita essa diferença. `status: ok` significa que a meta foi alcançada na
+base escolhida, não necessariamente no líquido após o cupom absorvido.

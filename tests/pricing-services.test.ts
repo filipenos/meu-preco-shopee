@@ -119,3 +119,17 @@ describe('inverse search independently checked against all price cents', () => {
     for (const target of targets) expect(engine.findPrice(0.13, target, 70000)).toBe(minimums.get(target))
   })
 })
+
+it('supports promotion and both coupon treatments for a net target', () => {
+  const ctx = { sellerType: 'cnpj' as const, storeCoupon: { minPrice: 0, rate: 0.03, maxDiscount: 3 } }
+  const input = { context: ctx, rulesConfig, items: [{ variationName: 'item', targetNet: 10, discountPercent: 0.2 }] }
+  const compensated = calculateFullPriceFromTargetNet({ ...input, couponTreatment: 'compensate' })[0]
+  const absorbed = calculateFullPriceFromTargetNet({ ...input, couponTreatment: 'absorb' })[0]
+  expect(compensated.netAmount).toBeGreaterThanOrEqual(10)
+  expect(absorbed.netAmount).toBeLessThan(10)
+  expect(absorbed.requiredFullPrice).toBeLessThan(compensated.requiredFullPrice)
+  expect(net(absorbed.requiredFullPrice, 0.2, { sellerType: 'cnpj' }).netAmount).toBeGreaterThanOrEqual(10)
+  expect(net(absorbed.requiredFullPrice - 0.01, 0.2, { sellerType: 'cnpj' }).netAmount).toBeLessThan(10)
+  expect(net(compensated.requiredFullPrice - 0.01, 0.2, ctx).netAmount).toBeLessThan(10)
+  expect(absorbed.netAmount).toBe(net(absorbed.requiredFullPrice, 0.2, ctx).netAmount)
+})
