@@ -1,9 +1,31 @@
 # Meu Preço Shopee
 
-Simulador de comissão Shopee 2026 para vendedores CPF e CNPJ, com cálculo por faixa, subsídio Pix e cenários de preço/líquido.
+Simulador de comissão Shopee 2026 para vendedores CPF e CNPJ, com políticas por data, cálculo em centavos, subsídio Pix e cenários de preço/líquido.
 
-Referência oficial (Shopee):
-- https://seller.shopee.com.br/edu/article/26839/Comissao-para-vendedores-CNPJ-e-CPF-em-2026
+**Status:** regras públicas revisadas em 18/09/2026. Arredondamentos e cenários não documentados ainda não foram conciliados com extratos reais. Não há garantia de correspondência integral com a Shopee. Consulte a [documentação do serviço](docs/calculation-service.md) para entradas, limites e pendências.
+
+## Documentação
+
+| Documento | Conteúdo |
+| --- | --- |
+| [Políticas comerciais](docs/shopee-policies.md) | Tabela atual, CPF/CNPJ, Pix, campanhas, cupons, frete, exceções e fontes oficiais |
+| [Histórico das políticas](docs/shopee-policy-history.md) | Vigências, alterações, regra atual, anúncio de outubro e procedimento de atualização |
+| [Serviço de cálculo](docs/calculation-service.md) | Entradas, unidades, arredondamento, API, auditoria e conciliação |
+| [Helpers CLI](scripts/README.md) | Formatos JSON e comandos de execução |
+
+## Política atual e mudança anunciada
+
+**Referência: 18/09/2026.** “Atual” nesta documentação é relativo a essa data.
+
+| Período | Fixo da primeira faixa | Limite de item barato CNPJ | Campanha geral |
+| --- | --- | --- | --- |
+| 01/03/2026 a 22/04/2026 | R$ 4,00 | R$ 8,00 | 2,5% |
+| **23/04/2026 a 30/09/2026 — atual** | **R$ 4,00** | **R$ 8,00** | **3,5%** |
+| 01/10/2026 em diante — anunciado | R$ 4,50 | R$ 9,00 | 3,5% |
+
+A primeira faixa vai até R$ 79,99; as demais parcelas fixas permanecem R$ 16, R$ 20 e R$ 26. A regra especial de item barato usa metade do preço como parcela fixa. Campanha se aplica somente durante a participação da loja, e campanhas especiais podem ter outra taxa. Veja os [detalhes e ressalvas](docs/shopee-policies.md).
+
+Fontes principais: [política CNPJ/CPF](https://seller.shopee.com.br/edu/article/26839/Comissao-para-vendedores-CNPJ-e-CPF-em-2026) e [Campanhas de Destaque](https://seller.shopee.com.br/edu/article/18712).
 
 ## Stack
 
@@ -32,80 +54,15 @@ npm test
 - `npm run helper:full-price-from-net -- --input ./scripts/test-data/dados.json`
 - Documentação completa (formato do JSON, parâmetros e saída): `scripts/README.md`
 
-## Casos de uso
+## Interface e serviços
 
-1. Informo o valor do produto
-- Entrada: valor do item + configurações.
-- Saída: comissão detalhada, subsídio Pix, valor líquido.
+O site tem uma única página: a calculadora de comissão e valor líquido recebido, a partir do preço do produto e das configurações da venda. Endereços de páginas removidas redirecionam para `/` quando atendidos pelo aplicativo.
 
-2. Informo quanto quero receber
-- Entrada: valor líquido alvo + configurações.
-- Saída: preço sugerido para atingir o líquido desejado.
+Os serviços e helpers de preço inverso, desconto, custo/lucro e pedidos continuam disponíveis para uso programático, conforme a [documentação do serviço](docs/calculation-service.md).
 
-## Regras principais de comissão (01/03/2026)
+## Referências históricas
 
-### CNPJ
+- [Pacote até 28/02/2026](references/shopee/2026-02-28/README.md): modelo legado, fora do seletor atual de políticas.
+- [Pacote de 01/03/2026](references/shopee/2026-03-01/README.md): regras e cenários locais de regressão, com limitações documentadas.
 
-| Faixa do item | Comissão | Subsídio Pix |
-| --- | --- | --- |
-| Até R$79,99 | 20% + R$4 | - |
-| R$80 a R$99,99 | 14% + R$16 | 5% |
-| R$100 a R$199,99 | 14% + R$20 | 5% |
-| R$200 a R$499,99 | 14% + R$26 | 5% |
-| Acima de R$500 | 14% + R$26 | 8% |
-
-### CPF
-
-- Mesmas faixas e percentuais do CNPJ.
-- Para CPF acima de 450 pedidos em 90 dias, soma adicional de R$3 por item.
-- Para CPF com até 450 pedidos em 90 dias, não aplica adicional de R$3.
-
-## Configurações principais
-
-- Campanha de Destaque Shopee (%): adicional aplicado somente quando a opção está ativa.
-- Adicional CPF (R$): taxa extra por item para CPF acima do limite de pedidos em 90 dias.
-- Limite pedidos CPF (90 dias): acima desse valor, aplica adicional CPF.
-- Limite item barato CNPJ (R$): abaixo desse valor, taxa fixa vira metade do preço do item.
-- Limite item barato CPF (R$): abaixo desse valor, aplica taxa regressiva de item.
-
-## Regras extras (documentação)
-
-### Operação e cobrança
-
-- CNPJ com item abaixo de R$8 usa taxa fixa de metade do preço do item.
-- CPF com item abaixo de R$12 usa taxa regressiva de item.
-- Não há comissão em cancelamento, devolução, reembolso ou desistência da compra.
-- Campanha de Destaque Shopee adiciona 2,5% durante campanha ativa.
-- Subsídio Pix não é repasse extra ao vendedor; é regra de precificação/comissão no fluxo Pix.
-- Atualização com vigência em 01/03/2026.
-
-### CPF e documentação
-
-- Com mais de 450 pedidos em 90 dias, adiciona R$3 por item (CPF).
-- Com até 450 pedidos em 90 dias, não adiciona os R$3 (CPF).
-- Vendedor com faturamento anual igual ou superior a R$81 mil deve emitir nota fiscal e operar com CNPJ.
-- Ao migrar de CPF para CNPJ, o adicional de CPF deixa de ser aplicado em até 7 dias úteis.
-
-### Frete e logística
-
-- Programa de Frete Grátis sem coparticipação para todos os vendedores.
-- Subsídio de frete:
-  - Até R$20 para itens de até R$79,99.
-  - Até R$30 para itens de R$80 a R$199,99.
-  - Até R$40 para itens acima de R$200.
-- Também há cupons de 50% de desconto no frete para compras acima de R$10.
-- Para vendedores com Intelipost/API de frete, há política logística específica a partir de março/2026.
-
-## Observações
-
-- A interface permite ajustar parâmetros para simulações, mas o padrão inicial segue a política oficial publicada em 06/02/2026.
-- Para valores de item muito baixos, o projeto aplica as regras especiais de item barato conforme tipo de vendedor.
-
-## Arquivos de validade (apoio)
-
-- `public/comissoes/comissao-calculadora-vigente-ate-2026-02-28.html`
-  - Calculadora estática da política antiga (vigente até 28/02/2026).
-- `public/comissoes/comissao-calculadora-vigente-a-partir-2026-03-01.html`
-  - Calculadora estática da política nova (vigente a partir de 01/03/2026).
-- `shopee-comissao-politica-antiga-ate-2026-02-28.txt`
-  - Texto da política antiga (até 28/02/2026).
+As referências locais não comprovam todas as regras oficiais nem a igualdade centavo a centavo. O [histórico](docs/shopee-policy-history.md) explica a diferença entre regra publicada, registro local e convenção do simulador.

@@ -21,3 +21,11 @@ Pacote local de referencia para validacao e regressao da politica de comissao us
 - O contrato valida:
   - que as regras default do dominio batem com `rules.json`;
   - que os cenarios de `examples.json` produzem exatamente as saidas esperadas.
+
+## Limites desta referência
+
+O HTML capturado contém a estrutura da aplicação, não o texto renderizado completo da política. O resumo, as regras JSON e os cenários locais não constituem extratos reais nem prova independente de todas as fórmulas. O cenário sintético `cnpj_pix_100_with_campaign` registra líquido de R$ 63,63, incompatível com R$ 95,00 menos R$ 31,38; o arquivo foi preservado e o teste passa a exigir o saldo contábil de R$ 63,62. Essa diferença não representa uma confirmação do arredondamento praticado pela Shopee. Veja o [contrato do serviço](../../../docs/calculation-service.md).
+
+## Atualizações posteriores
+
+Este pacote não deve ser tratado como configuração atual: a campanha mudou em 23/04/2026 e há alteração anunciada para 01/10/2026. Consulte o [histórico consolidado](../../../docs/shopee-policy-history.md) e as [políticas detalhadas](../../../docs/shopee-policies.md). A data de captura (20/02/2026) não é a data de vigência (01/03/2026).

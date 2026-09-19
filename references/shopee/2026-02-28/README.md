@@ -24,3 +24,11 @@ Pacote local da politica antiga separado por tipo de vendedor para comparacoes h
 
 - Contrato legado: `tests/contracts/shopee-2026-02-28.contract.test.ts`
 - Esses arquivos servem para comparar politica antiga vs nova sem perder historico.
+
+## Status histórico
+
+Este pacote representa o modelo legado registrado pelo projeto em 20/02/2026. As URLs oficiais são mutáveis e atualmente exibem regras posteriores; a consulta atual não revalida cada hipótese do modelo antigo. O seletor atual de políticas não aceita datas anteriores a 01/03/2026. Consulte o [histórico consolidado](../../../docs/shopee-policy-history.md) e a [política atual documentada](../../../docs/shopee-policies.md).
+
+## Serviços legados de apoio aos testes
+
+Os arquivos `services/legacy-cpf-commission-service.js` e `services/legacy-cnpj-commission-service.js` foram preservados como referência executável dos testes de contrato. Não são publicados no site. As antigas páginas HTML de cálculo e comparação foram removidas; a única página do aplicativo é a calculadora principal de comissão e líquido.
