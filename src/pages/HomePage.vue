@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useCalculation } from '../composables/use-calculation'
 import CalculationNotice from '../components/CalculationNotice.vue'
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { inject } from '@vercel/analytics'
 
 import { getCommissionRules, todayInBrazil } from '../domain/default-rules'
@@ -10,6 +10,7 @@ import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getCommissionFromItemPrice } from '../use-cases/get-commission-from-item-price'
 import { compareLowerPrices } from '../services/lower-price-service'
+import { calculateFullPriceFromTargetNet } from '../services/full-price-from-target-net-service'
 
 inject()
 
@@ -31,6 +32,9 @@ const defaultRulesConfig = {
   cnpjLowPriceThreshold: policyRules.cnpjLowPriceThreshold,
   cpfLowPriceThreshold: 12,
 }
+
+const calculationMode = ref<'price' | 'target'>('price')
+const targetNet = ref(70)
 
 const caseOneForm = reactive({
   itemPrice: 500,
@@ -103,22 +107,32 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
   }
 }
 
-const { result: priceComparison, error: calculationError } = useCalculation(() =>
-  compareLowerPrices({
+const { result: calculation, error: calculationError } = useCalculation(() => {
+  const context = {
+    sellerType: caseOneForm.sellerType,
+    paymentMethod: caseOneForm.paymentMethod,
+    ordersLast90Days: caseOneForm.ordersLast90Days,
+    includeCampaignExtra: caseOneForm.includeCampaignExtra,
+    storeCoupon: buildStoreCoupon(caseOneForm.includeStoreCoupon),
+  }
+  if (calculationMode.value === 'target') {
+    const [result] = calculateFullPriceFromTargetNet({
+      context,
+      items: [{ variationName: 'item', discountPercent: 0, targetNet: targetNet.value }],
+      rulesConfig: serviceRulesConfig.value,
+    })
+    if (result.status === 'target-too-low') throw new Error('Informe um valor líquido maior que zero.')
+    if (result.status === 'target-too-high') throw new Error('Não foi possível atingir esse líquido no limite de preço da calculadora.')
+    return { current: result, fullPrice: result.requiredFullPrice, suggestion: null }
+  }
+  return {
+    ...compareLowerPrices({ fullPrice: caseOneForm.itemPrice, context, rulesConfig: serviceRulesConfig.value }),
     fullPrice: caseOneForm.itemPrice,
-    context: {
-      sellerType: caseOneForm.sellerType,
-      paymentMethod: caseOneForm.paymentMethod,
-      ordersLast90Days: caseOneForm.ordersLast90Days,
-      includeCampaignExtra: caseOneForm.includeCampaignExtra,
-      storeCoupon: buildStoreCoupon(caseOneForm.includeStoreCoupon),
-    },
-    rulesConfig: serviceRulesConfig.value,
-  }),
-)
+  }
+})
 
-const caseOneResult = computed(() => priceComparison.value?.current)
-const lowerPriceSuggestion = computed(() => priceComparison.value?.suggestion)
+const caseOneResult = computed(() => calculation.value?.current)
+const lowerPriceSuggestion = computed(() => calculation.value?.suggestion)
 
 const caseOneCommissionBreakdown = computed(() =>
   caseOneResult.value ? getCommissionFromItemPrice({
@@ -204,11 +218,27 @@ function resetRulesConfig(): void {
 
     <section class="grid-two grid-main">
       <article class="card">
-        <h2>Calcular taxa de comissão Shopee</h2>
-        <p class="card-subtitle">Recebe preço e configurações, com cupom loja opcional antes da comissão.</p>
+        <h2>{{ calculationMode === 'target' ? 'Calcular preço de cadastro' : 'Calcular quanto vou receber' }}</h2>
+        <label>
+          O que você quer calcular?
+          <select v-model="calculationMode">
+            <option value="price">Tenho um preço</option>
+            <option value="target">Quero receber um valor</option>
+          </select>
+        </label>
+        <p class="card-subtitle">
+          {{ calculationMode === 'target'
+            ? 'Encontre o menor preço de cadastro para receber o líquido desejado, considerando taxas e cupom.'
+            : 'Informe o preço para calcular taxas e quanto você recebe.' }}
+        </p>
 
         <div class="form-grid">
-          <label>
+          <label v-if="calculationMode === 'target'">
+            Quanto quero receber líquido (R$)
+            <input v-model.number="targetNet" type="number" min="0.01" max="100000000" step="0.01" />
+            <small>Por item, após os descontos da Shopee e antes do custo do produto.</small>
+          </label>
+          <label v-else>
             Valor do produto
             <input v-model.number="caseOneForm.itemPrice" type="number" min="0" step="0.01" />
           </label>
@@ -260,10 +290,20 @@ function resetRulesConfig(): void {
           </label>
         </div>
 
+        <section v-if="calculationMode === 'target' && calculation && caseOneResult" class="price-suggestion" aria-labelledby="target-result-title">
+          <h3 id="target-result-title">Preço para cadastrar: {{ formatCurrency(calculation.fullPrice) }}</h3>
+          <p>
+            Para receber {{ formatCurrency(targetNet) }}, cadastre por
+            <strong>{{ formatCurrency(calculation.fullPrice) }}</strong>.
+            Líquido estimado: <strong>{{ formatCurrency(caseOneResult.netAmount) }}</strong> por item.
+          </p>
+          <p class="metric-note">Menor preço que atinge sua meta, considerando os centavos e as mudanças de faixa.</p>
+        </section>
+
         <div v-if="caseOneResult && caseOneCommissionBreakdown" class="result-grid">
           <div>
-            <span>Preço base</span>
-            <strong>{{ formatCurrency(caseOneForm.itemPrice) }}</strong>
+            <span>Preço de cadastro</span>
+            <strong>{{ formatCurrency(calculation!.fullPrice) }}</strong>
           </div>
           <div>
             <span>Desconto cupom</span>
