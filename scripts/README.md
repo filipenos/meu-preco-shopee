@@ -2,6 +2,10 @@
 
 Este diretório mantém 3 helpers CLI para cálculo fora da UI.
 
+**Mudança de contrato:** taxas agora aceitam somente frações de 0 a 1. Valores ambíguos ou inválidos geram erro. `items` são simulações independentes; para carrinhos use `calculateOrderPricing`. Defina `rulesConfig.effectiveDate` (`YYYY-MM-DD`) para fixar a política. Veja [serviço de cálculo](../docs/calculation-service.md).
+
+Os resultados incluem avisos de regras ainda não conciliadas; passar nos testes não certifica igualdade com extratos reais. Custos adicionais conhecidos podem ser informados no contexto.
+
 ## Arquivo de entrada (`scripts/test-data/dados.json`)
 
 - O caminho é sempre o mesmo: `scripts/test-data/dados.json`.
@@ -36,7 +40,7 @@ Entrada esperada (`dados.json`):
     }
   },
   "items": [
-    { "variationName": "10 pecas", "fullPrice": 80.02, "discountPercent": 50 }
+    { "variationName": "10 pecas", "fullPrice": 80.02, "discountPercent": 0.5 }
   ]
 }
 ```
@@ -48,9 +52,9 @@ Parâmetros:
 - `context.includeCampaignExtra` opcional: default `false`.
 - `context.storeCoupon` opcional:
 - `minPrice`: valor mínimo para aplicar cupom.
-- `rate`: percentual do cupom (`0.03` ou `3`).
+- `rate`: fração do cupom (`0.03` = 3%); `3` é inválido.
 - `maxDiscount`: teto do desconto em reais.
-- `items[].discountPercent`: aceita `50` ou `0.5`.
+- `items[].discountPercent`: aceita somente fração (`0.5` = 50%, `0.01` = 1%).
 
 Saída por variação:
 - preço com desconto do produto
@@ -105,7 +109,7 @@ Saída por variação:
 - líquido alcançado
 - `status`:
 - `ok`: alvo atendido
-- `target-too-high`: alvo maior que o líquido sem desconto
+- `target-too-high`: nenhum desconto de 0% a 99%, em passos de 0,01 ponto percentual, atende o alvo
 - `max-discount-cap-reached`: até 99% de desconto ainda sobra líquido acima do alvo
 
 ## 3) Helper: preço cheio a partir do líquido alvo
@@ -136,14 +140,14 @@ Entrada esperada (`dados.json`):
     }
   },
   "items": [
-    { "variationName": "10 pecas", "discountPercent": 50, "targetNet": 27 }
+    { "variationName": "10 pecas", "discountPercent": 0.5, "targetNet": 27 }
   ]
 }
 ```
 
 Parâmetros:
 - `context`: mesma estrutura dos outros helpers.
-- `items[].discountPercent`: desconto já decidido (`50` ou `0.5`).
+- `items[].discountPercent`: desconto já decidido (`0.5` = 50%).
 - `items[].targetNet`: líquido desejado por variação.
 
 Saída por variação:

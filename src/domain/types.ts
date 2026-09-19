@@ -25,6 +25,21 @@ export interface CommissionRules {
   cpfLowPriceWithoutExtraFeePoints: InterpolationPoint[]
 }
 
+export type CalculationWarning =
+  | 'rounding-not-reconciled'
+  | 'cpf-low-price-unverified'
+  | 'pix-rate-assumed'
+  | 'campaign-pix-base-unverified'
+  | 'coupon-commission-base-unverified'
+  | 'order-coupon-allocation-unverified'
+  | 'custom-rules'
+
+export interface CalculationAudit {
+  effectiveDate?: string
+  policyVersion?: string
+  warnings: CalculationWarning[]
+}
+
 export interface CommissionInput {
   itemPrice: number
   sellerType: SellerType
@@ -32,9 +47,11 @@ export interface CommissionInput {
   ordersLast90Days: number
   includeCampaignExtra: boolean
   rules: CommissionRules
+  pixSubsidyRateOverride?: number
 }
 
 export interface CommissionResult {
+  audit: CalculationAudit
   itemPrice: number
   itemInvoicePrice: number
   sellerType: SellerType
@@ -60,6 +77,7 @@ export interface InverseCommissionInput {
   ordersLast90Days: number
   includeCampaignExtra: boolean
   rules: CommissionRules
+  pixSubsidyRateOverride?: number
 }
 
 export interface InverseCommissionResult {

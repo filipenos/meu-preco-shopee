@@ -58,7 +58,7 @@ function loadJson<T>(relativePath: string): T {
 }
 
 describe('shopee 2026 contract', () => {
-  const service = createCommissionService()
+  const service = createCommissionService({ effectiveDate: '2026-03-01' })
   const referenceRules = loadJson<ReferenceRules>('references/shopee/2026-03-01/rules.json')
   const examples = loadJson<ContractExample[]>('references/shopee/2026-03-01/examples.json')
 
@@ -80,7 +80,9 @@ describe('shopee 2026 contract', () => {
       expect(result.commissionAmount, example.id).toBe(example.expected.commissionAmount)
       expect(result.campaignExtraAmount, example.id).toBe(example.expected.campaignExtraAmount)
       expect(result.totalCommissionAmount, example.id).toBe(example.expected.totalCommissionAmount)
-      expect(result.netAmount, example.id).toBe(example.expected.netAmount)
+      // The historical synthetic fixture rounded net independently (95 - 31.38 != 63.63).
+      // It is not an actual Shopee statement; preserve it and test the cent-balanced ledger.
+      expect(result.netAmount, example.id).toBe(example.id === 'cnpj_pix_100_with_campaign' ? 63.62 : example.expected.netAmount)
     }
   })
 })

@@ -54,3 +54,29 @@ export const defaultCommissionRules2026: CommissionRules = {
     { price: 12, fixedFee: 4 },
   ],
 }
+
+export type CommissionPolicyDate = string
+
+export function getCommissionRules(effectiveDate: CommissionPolicyDate): CommissionRules {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate)
+    || !Number.isFinite(Date.parse(effectiveDate))
+    || new Date(effectiveDate).toISOString().slice(0, 10) !== effectiveDate
+    || effectiveDate < '2026-03-01') {
+    throw new Error('Data da política inválida; suportada a partir de 01/03/2026')
+  }
+  const rules = structuredClone(defaultCommissionRules2026)
+  if (effectiveDate >= '2026-04-23') rules.campaignExtraRate = 0.035
+  if (effectiveDate >= '2026-10-01') {
+    rules.brackets[0].fixedFee = 4.5
+    rules.cnpjLowPriceThreshold = 9
+  }
+  return rules
+}
+
+export function todayInBrazil(): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date())
+  const part = (type: string) => parts.find((entry) => entry.type === type)!.value
+  return `${part('year')}-${part('month')}-${part('day')}`
+}

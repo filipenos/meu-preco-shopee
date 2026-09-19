@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createCommissionService } from '../src/services/commission-service'
 
-const service = createCommissionService()
+const service = createCommissionService({ effectiveDate: '2026-03-01' })
 
 describe('calculateCommission', () => {
   it('calcula cnpj sem pix para item de R$500', () => {
@@ -167,7 +167,7 @@ describe('calculateCommission', () => {
     expect(result.itemInvoicePrice).toBe(95)
     expect(result.campaignExtraAmount).toBe(2.38)
     expect(result.totalCommissionAmount).toBe(31.38)
-    expect(result.netAmount).toBe(63.63)
+    expect(result.netAmount).toBe(63.62)
   })
 })
 

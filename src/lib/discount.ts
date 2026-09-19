@@ -1,15 +1,12 @@
+import { rateUnits } from './money'
+
+// UI fields use percent points: 1 means 1%, while service rates use 0.01.
 export function normalizePercentInput(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0
-  }
+  if (!Number.isFinite(value)) return 0
+  return Math.min(100, Math.max(0, value)) / 100
+}
 
-  const percent = value > 1 ? value / 100 : value
-  if (percent < 0) {
-    return 0
-  }
-  if (percent > 1) {
-    return 1
-  }
-
-  return percent
+export function validateRate(value: number): number {
+  rateUnits(value)
+  return value
 }

@@ -51,6 +51,8 @@ async function main(): Promise<void> {
 
   console.log('Preco cheio sugerido por variacao (a partir do liquido alvo + desconto)')
   for (const result of results) {
+    console.log(`  política: ${result.audit.policyVersion}; data: ${result.audit.effectiveDate}`)
+    console.log(`  pendências de validação: ${result.audit.warnings.join(', ')}`)
     console.log(`\n- ${result.variationName}`)
     console.log(`  desconto informado: ${formatPercent(result.discountPercent)}`)
     console.log(`  liquido alvo: ${formatCurrency(result.targetNet)}`)
