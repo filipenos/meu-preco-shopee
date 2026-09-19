@@ -3,8 +3,8 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { calculateLegacyCpfCommission } from '../../public/comissoes/services/legacy-cpf-commission-service.js'
-import { calculateLegacyCnpjCommission } from '../../public/comissoes/services/legacy-cnpj-commission-service.js'
+import { calculateLegacyCpfCommission } from '../../references/shopee/2026-02-28/services/legacy-cpf-commission-service.js'
+import { calculateLegacyCnpjCommission } from '../../references/shopee/2026-02-28/services/legacy-cnpj-commission-service.js'
 
 interface CpfRules {
   article: number

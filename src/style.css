@@ -78,21 +78,6 @@ p {
   text-decoration: underline;
 }
 
-.hero-links {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.primary-link {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 8px 12px;
-  border: 1px solid #9ab4ec;
-  border-radius: 10px;
-  background: #e8f0ff;
-}
-
 .eyebrow {
   display: inline-block;
   padding: 6px 10px;
@@ -128,57 +113,8 @@ p {
   color: var(--ink-1);
 }
 
-.input-block {
-  border: 1px solid #d7e0d0;
-  border-radius: 14px;
-  padding: 12px;
-  background: #fcfef9;
-  display: grid;
-  gap: 10px;
-}
-
-.input-block-header h3 {
-  font-size: 1rem;
-}
-
-.input-block-header p {
-  margin-top: 4px;
-  color: #526560;
-  font-size: 0.88rem;
-}
-
-.result-highlight {
-  border: 1px solid #b6e0d7;
-  border-radius: 12px;
-  background: #ecfaf7;
-  padding: 10px 12px;
-  display: grid;
-  gap: 4px;
-  align-content: center;
-  max-width: 320px;
-}
-
-.result-highlight span {
-  font-size: 0.82rem;
-  color: #3b665b;
-}
-
-.result-highlight strong {
-  font-size: 1.18rem;
-}
-
 .full {
   grid-column: 1 / -1;
-}
-
-.table-first {
-  order: -1;
-  min-width: 0;
-}
-
-.product-value-card {
-  grid-column: 1 / -1;
-  order: -1;
 }
 
 .form-grid {
@@ -241,11 +177,6 @@ select {
   background: #fbfff3;
 }
 
-.result-grid .result-primary {
-  border-color: #9ccdc2;
-  background: linear-gradient(130deg, #e8f8f4, #f0fbf8);
-}
-
 .result-grid span {
   display: block;
   font-size: 0.8rem;
@@ -270,126 +201,6 @@ select {
   display: grid;
   gap: 4px;
   color: var(--ink-1);
-}
-
-.table-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.table-actions button,
-.danger-btn {
-  border: 1px solid #b5c8f0;
-  border-radius: 10px;
-  background: #edf3ff;
-  color: #1e437f;
-  font: inherit;
-  font-weight: 700;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.table-actions button:hover,
-.danger-btn:hover {
-  background: #dde9ff;
-}
-
-.danger-btn {
-  border-color: #e6b7b7;
-  background: #ffefef;
-  color: #873333;
-}
-
-.danger-btn:hover {
-  background: #ffdede;
-}
-
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid #d8dfce;
-  border-radius: 12px;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.table-scroll-shell {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.table-scroll-hint {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #4f655d;
-  font-weight: 600;
-}
-
-.pricing-table {
-  width: 100%;
-  min-width: 980px;
-  border-collapse: collapse;
-  background: #fff;
-}
-
-.pricing-table th,
-.pricing-table td {
-  border-bottom: 1px solid #e0e7d6;
-  padding: 8px;
-  text-align: left;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
-.pricing-table th {
-  background: #f6faef;
-  font-size: 0.82rem;
-  color: #4f655d;
-}
-
-.pricing-table td {
-  font-size: 0.9rem;
-}
-
-.pricing-table td input {
-  min-width: 120px;
-}
-
-.pricing-table th:first-child,
-.pricing-table td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-
-.pricing-table th:first-child {
-  z-index: 3;
-  background: #f6faef;
-}
-
-.pricing-table td:first-child {
-  background: #fff;
-}
-
-.status-pill {
-  display: inline-block;
-  border: 1px solid #c9dbd1;
-  border-radius: 999px;
-  padding: 3px 8px;
-  background: #eff8f2;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #3a5f50;
-}
-
-.empty-table {
-  padding: 12px;
-  color: #5d7169;
 }
 
 .rates-grid {
@@ -512,40 +323,17 @@ select {
   .notice-grid {
     grid-template-columns: 1fr;
   }
-
-  .table-actions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .table-scroll-hint {
-    display: block;
-  }
-
-  .table-scroll-shell::before,
-  .table-scroll-shell::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 18px;
-    pointer-events: none;
-    z-index: 4;
-  }
-
-  .table-scroll-shell::before {
-    left: 1px;
-    background: linear-gradient(90deg, rgba(251, 253, 247, 0.98), rgba(251, 253, 247, 0));
-  }
-
-  .table-scroll-shell::after {
-    right: 1px;
-    background: linear-gradient(270deg, rgba(251, 253, 247, 0.98), rgba(251, 253, 247, 0));
-  }
 }
 
-@media (min-width: 981px) {
-  .table-scroll-hint {
-    display: none;
-  }
+.price-suggestion {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #86bda2;
+  border-radius: 12px;
+  background: #f0fdf4;
+  color: #14532d;
+}
+
+.price-suggestion p {
+  margin: 0.75rem 0;
 }

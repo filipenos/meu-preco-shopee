@@ -1,29 +1,34 @@
 <script setup lang="ts">
+import { useCalculation } from '../composables/use-calculation'
+import CalculationNotice from '../components/CalculationNotice.vue'
 import { computed, reactive } from 'vue'
 import { inject } from '@vercel/analytics'
 
-import { defaultCommissionRules2026 } from '../domain/default-rules'
+import { getCommissionRules, todayInBrazil } from '../domain/default-rules'
 import type { CommissionRules, PaymentMethod, SellerType } from '../domain/types'
 import { normalizePercentInput } from '../lib/discount'
 import { formatCurrency, formatPercent } from '../lib/money'
 import { getCommissionFromItemPrice } from '../use-cases/get-commission-from-item-price'
-import { calculateNetFromFullPrice } from '../services/net-from-full-price-service'
+import { compareLowerPrices } from '../services/lower-price-service'
 
 inject()
 
+const effectiveDate = todayInBrazil()
+const policyRules = getCommissionRules(effectiveDate)
+
 const rulesConfig = reactive({
-  campaignExtraRatePercent: 2.5,
+  campaignExtraRatePercent: Number((policyRules.campaignExtraRate * 100).toFixed(4)),
   cpfExtraFee: 3,
   cpfExtraOrdersThreshold90d: 450,
-  cnpjLowPriceThreshold: 8,
+  cnpjLowPriceThreshold: policyRules.cnpjLowPriceThreshold,
   cpfLowPriceThreshold: 12,
 })
 
 const defaultRulesConfig = {
-  campaignExtraRatePercent: 2.5,
+  campaignExtraRatePercent: Number((policyRules.campaignExtraRate * 100).toFixed(4)),
   cpfExtraFee: 3,
   cpfExtraOrdersThreshold90d: 450,
-  cnpjLowPriceThreshold: 8,
+  cnpjLowPriceThreshold: policyRules.cnpjLowPriceThreshold,
   cpfLowPriceThreshold: 12,
 }
 
@@ -44,7 +49,7 @@ const storeCouponConfig = reactive({
 
 function formatBracketRange(min: number, max: number | null): string {
   return max === null
-    ? `Acima de ${formatCurrency(min)}`
+    ? `A partir de ${formatCurrency(min)}`
     : `${formatCurrency(min)} até ${formatCurrency(max)}`
 }
 
@@ -54,7 +59,7 @@ const cnpjRuleCards = computed(() => {
     max: bracket.max,
     rangeLabel: formatBracketRange(bracket.min, bracket.max),
     commissionLabel: `${formatPercent(bracket.percentageRate)} + ${formatCurrency(bracket.fixedFee)}`,
-    pixLabel: bracket.pixSubsidyRate === 0 ? '-' : formatPercent(bracket.pixSubsidyRate),
+    pixLabel: bracket.pixSubsidyRate === 0 ? '-' : `${bracket.pixSubsidyRate === 0.08 ? 'Até ' : ''}${formatPercent(bracket.pixSubsidyRate)}`,
   }))
 })
 
@@ -64,12 +69,12 @@ const cpfRuleCards = computed(() => {
     max: bracket.max,
     rangeLabel: formatBracketRange(bracket.min, bracket.max),
     commissionLabel: `${formatPercent(bracket.percentageRate)} + ${formatCurrency(bracket.fixedFee)} + ${cpfExtraFeeLabel.value}`,
-    pixLabel: bracket.pixSubsidyRate === 0 ? '-' : formatPercent(bracket.pixSubsidyRate),
+    pixLabel: bracket.pixSubsidyRate === 0 ? '-' : `${bracket.pixSubsidyRate === 0.08 ? 'Até ' : ''}${formatPercent(bracket.pixSubsidyRate)}`,
   }))
 })
 
 const activeRules = computed<CommissionRules>(() => ({
-  ...defaultCommissionRules2026,
+  ...policyRules,
   campaignExtraRate: rulesConfig.campaignExtraRatePercent / 100,
   cpfExtraFee: rulesConfig.cpfExtraFee,
   cpfExtraOrdersThreshold90d: rulesConfig.cpfExtraOrdersThreshold90d,
@@ -78,6 +83,7 @@ const activeRules = computed<CommissionRules>(() => ({
 }))
 
 const serviceRulesConfig = computed(() => ({
+  effectiveDate,
   campaignExtraRate: rulesConfig.campaignExtraRatePercent / 100,
   cpfExtraFee: rulesConfig.cpfExtraFee,
   cpfExtraOrdersThreshold90d: rulesConfig.cpfExtraOrdersThreshold90d,
@@ -97,8 +103,9 @@ function buildStoreCoupon(enabled: boolean): { minPrice: number; rate: number; m
   }
 }
 
-const caseOneResult = computed(() => {
-  const [result] = calculateNetFromFullPrice({
+const { result: priceComparison, error: calculationError } = useCalculation(() =>
+  compareLowerPrices({
+    fullPrice: caseOneForm.itemPrice,
     context: {
       sellerType: caseOneForm.sellerType,
       paymentMethod: caseOneForm.paymentMethod,
@@ -106,32 +113,27 @@ const caseOneResult = computed(() => {
       includeCampaignExtra: caseOneForm.includeCampaignExtra,
       storeCoupon: buildStoreCoupon(caseOneForm.includeStoreCoupon),
     },
-    items: [
-      {
-        variationName: 'item',
-        fullPrice: caseOneForm.itemPrice,
-        discountPercent: 0,
-      },
-    ],
     rulesConfig: serviceRulesConfig.value,
-  })
+  }),
+)
 
-  return result
-})
+const caseOneResult = computed(() => priceComparison.value?.current)
+const lowerPriceSuggestion = computed(() => priceComparison.value?.suggestion)
 
 const caseOneCommissionBreakdown = computed(() =>
-  getCommissionFromItemPrice({
+  caseOneResult.value ? getCommissionFromItemPrice({
     itemPrice: caseOneResult.value.finalBuyerPrice,
     sellerType: caseOneForm.sellerType,
     paymentMethod: caseOneForm.paymentMethod,
     ordersLast90Days: caseOneForm.ordersLast90Days,
     includeCampaignExtra: caseOneForm.includeCampaignExtra,
     rules: activeRules.value,
-  }),
+  }) : null,
 )
 
 const appliedBracketLabel = computed(() => {
-  const price = caseOneResult.value.finalBuyerPrice
+  const price = caseOneResult.value?.finalBuyerPrice
+  if (price === undefined) return 'Não identificada'
   const bracket = activeRules.value.brackets.find((item) => isPriceInBracket(price, item.min, item.max))
 
   return bracket ? formatBracketRange(bracket.min, bracket.max) : 'Não identificada'
@@ -197,6 +199,8 @@ function resetRulesConfig(): void {
         </a>
       </p>
     </section>
+    <p v-if="calculationError" role="alert" class="card full">{{ calculationError }}</p>
+    <CalculationNotice :audit="caseOneResult?.audit" />
 
     <section class="grid-two grid-main">
       <article class="card">
@@ -256,7 +260,7 @@ function resetRulesConfig(): void {
           </label>
         </div>
 
-        <div class="result-grid">
+        <div v-if="caseOneResult && caseOneCommissionBreakdown" class="result-grid">
           <div>
             <span>Preço base</span>
             <strong>{{ formatCurrency(caseOneForm.itemPrice) }}</strong>
@@ -282,7 +286,28 @@ function resetRulesConfig(): void {
           </div>
         </div>
 
-        <ul class="explain-list">
+        <section v-if="lowerPriceSuggestion && caseOneResult" class="price-suggestion" aria-labelledby="price-suggestion-title">
+          <h3 id="price-suggestion-title">Você pode receber mais vendendo por menos</h3>
+          <p>
+            Por <strong>{{ formatCurrency(lowerPriceSuggestion.suggestedPrice) }}</strong>,
+            você recebe <strong>{{ formatCurrency(lowerPriceSuggestion.outcome.netAmount) }}</strong> líquidos.
+            No preço atual, recebe {{ formatCurrency(caseOneResult.netAmount) }}.
+          </p>
+          <p>
+            Reduzindo {{ formatCurrency(lowerPriceSuggestion.priceReduction) }} no preço,
+            você recebe <strong>{{ formatCurrency(lowerPriceSuggestion.netGain) }} a mais por item</strong>.
+          </p>
+          <p class="metric-note">
+            Comparação com as mesmas configurações, recalculando cupom, taxas e faixa.
+            Valores estimados conforme as regras e ressalvas desta simulação.
+          </p>
+          <CalculationNotice :audit="lowerPriceSuggestion.outcome.audit" />
+          <button type="button" @click="caseOneForm.itemPrice = lowerPriceSuggestion.suggestedPrice">
+            Usar preço de {{ formatCurrency(lowerPriceSuggestion.suggestedPrice) }}
+          </button>
+        </section>
+
+        <ul v-if="caseOneResult && caseOneCommissionBreakdown" class="explain-list">
           <li>{{ sellerLabel(caseOneForm.sellerType) }} • {{ paymentLabel(caseOneForm.paymentMethod) }}</li>
           <li>Faixa aplicada: {{ appliedBracketLabel }}</li>
           <li>
@@ -309,7 +334,7 @@ function resetRulesConfig(): void {
             <div
               v-for="item in cnpjRuleCards"
               :key="`cnpj-${item.rangeLabel}`"
-              :class="['rate-item', 'large', { 'rate-item-active': isPriceInBracket(caseOneResult.finalBuyerPrice, item.min, item.max) }]"
+              :class="['rate-item', 'large', { 'rate-item-active': isPriceInBracket(caseOneResult?.finalBuyerPrice ?? -1, item.min, item.max) }]"
             >
               <h4>{{ item.rangeLabel }}</h4>
               <p>Comissão: {{ item.commissionLabel }}</p>
@@ -328,7 +353,7 @@ function resetRulesConfig(): void {
             <div
               v-for="item in cpfRuleCards"
               :key="`cpf-${item.rangeLabel}`"
-              :class="['rate-item', 'large', { 'rate-item-active': isPriceInBracket(caseOneResult.finalBuyerPrice, item.min, item.max) }]"
+              :class="['rate-item', 'large', { 'rate-item-active': isPriceInBracket(caseOneResult?.finalBuyerPrice ?? -1, item.min, item.max) }]"
             >
               <h4>{{ item.rangeLabel }}</h4>
               <p>Comissão: {{ item.commissionLabel }}</p>
@@ -342,7 +367,7 @@ function resetRulesConfig(): void {
     <section class="card full">
       <h2>Configurações das regras</h2>
       <p class="card-subtitle">
-        Área avançada. Se você quer usar o padrão oficial de 01/03/2026, não precisa alterar nada.
+        Área avançada. Os valores iniciais seguem a política aplicável à data do cálculo.
       </p>
 
       <details class="advanced-box">
@@ -399,7 +424,7 @@ function resetRulesConfig(): void {
 
     <section class="card full">
       <h2>Regras e observações</h2>
-      <p class="card-subtitle">Resumo operacional da política vigente em 01/03/2026.</p>
+      <p class="card-subtitle">Resumo das regras consultadas em 18/09/2026; parâmetros selecionados acima.</p>
 
       <div class="notice-grid">
         <article>
@@ -411,9 +436,9 @@ function resetRulesConfig(): void {
             <li>
               CPF com item abaixo de {{ cpfLowPriceThresholdLabel }} usa taxa regressiva de item (modelo interpolado).
             </li>
-            <li>Sem cobrança em cancelamento, devolução, reembolso ou desistência da compra.</li>
-            <li>Campanha de Destaque Shopee adiciona {{ campaignRateLabel }} durante campanha ativa.</li>
-            <li>Atualização desta política com vigência em 01/03/2026.</li>
+            <li>Sem comissão em cancelamento ou devolução integral; compensações recebidas em disputas podem ter comissão.</li>
+            <li>Campanha de Destaque Shopee adiciona {{ campaignRateLabel }} sobre todas as vendas da loja durante a participação na campanha.</li>
+            <li>Campanha: 3,5% desde 23/04/2026. Em 01/10/2026, taxa fixa inicial passa para R$ 4,50 e limite CNPJ para R$ 9.</li>
             <li>Subsídio Pix não é repasse extra ao vendedor; é regra de precificação/comissão no pagamento por Pix.</li>
           </ul>
         </article>
@@ -439,7 +464,7 @@ function resetRulesConfig(): void {
         <article>
           <h3>Frete e logística</h3>
           <ul>
-            <li>Programa de Frete Grátis sem coparticipação para todos os vendedores.</li>
+            <li>Logística do vendedor (Intelipost/API): coparticipação de 25% do cupom de frete utilizado, limitada a R$ 10 por pedido.</li>
             <li>Subsídio de frete: até R$20 (itens até R$79,99), até R$30 (R$80 a R$199,99), até R$40 (acima de R$200).</li>
             <li>Também há cupons de 50% de desconto no frete para compras acima de R$10.</li>
             <li>Vendedores com Intelipost/API de frete possuem política logística específica a partir de março/2026.</li>
